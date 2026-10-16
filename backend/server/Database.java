@@ -8,21 +8,67 @@ public class Database {
     
     
     
-    public static final String DB_URL = System.getenv("DB_URL") != null 
-            ? System.getenv("DB_URL") 
-            : "jdbc:postgresql://ep-sparkling-wave-aoew74uw-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
+    static {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Notice: org.postgresql.Driver not found on classpath");
+        }
+    }
 
-    public static final String DB_USER = System.getenv("DB_USERNAME") != null 
-            ? System.getenv("DB_USERNAME") 
-            : "neondb_owner";
+    public static final String DEFAULT_DB_URL = "jdbc:postgresql://ep-sparkling-wave-aoew74uw-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
+    public static final String DEFAULT_DB_USER = "neondb_owner";
+    public static final String DEFAULT_DB_PASSWORD = "npg_GRfF8bse4oZy";
 
-    public static final String DB_PASSWORD = System.getenv("DB_PASSWORD") != null 
-            ? System.getenv("DB_PASSWORD") 
-            : "npg_GRfF8bse4oZy";
+    public static String DB_URL = DEFAULT_DB_URL;
+    public static String DB_USER = DEFAULT_DB_USER;
+    public static String DB_PASSWORD = DEFAULT_DB_PASSWORD;
 
-    
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        String rawUrl = System.getenv("DB_URL");
+        if (rawUrl == null || rawUrl.trim().isEmpty()) {
+            rawUrl = DEFAULT_DB_URL;
+        }
+        rawUrl = rawUrl.trim();
+
+        String user = System.getenv("DB_USERNAME");
+        String pass = System.getenv("DB_PASSWORD");
+
+        if (rawUrl.startsWith("postgres://") || rawUrl.startsWith("postgresql://")) {
+            String withoutProtocol = rawUrl.substring(rawUrl.indexOf("://") + 3);
+            if (withoutProtocol.contains("@")) {
+                String userInfo = withoutProtocol.substring(0, withoutProtocol.indexOf("@"));
+                String hostPart = withoutProtocol.substring(withoutProtocol.indexOf("@") + 1);
+                if (user == null || user.trim().isEmpty()) {
+                    if (userInfo.contains(":")) {
+                        user = userInfo.substring(0, userInfo.indexOf(":"));
+                        pass = userInfo.substring(userInfo.indexOf(":") + 1);
+                    } else {
+                        user = userInfo;
+                    }
+                }
+                rawUrl = "jdbc:postgresql://" + hostPart;
+            } else {
+                rawUrl = "jdbc:postgresql://" + withoutProtocol;
+            }
+        } else if (!rawUrl.startsWith("jdbc:postgresql://")) {
+            rawUrl = "jdbc:postgresql://" + rawUrl;
+        }
+
+        rawUrl = rawUrl.replace("&channel_binding=require", "").replace("?channel_binding=require&", "?").replace("?channel_binding=require", "");
+
+        if (user == null || user.trim().isEmpty()) {
+            user = DEFAULT_DB_USER;
+        }
+        if (pass == null || pass.trim().isEmpty()) {
+            pass = DEFAULT_DB_PASSWORD;
+        }
+
+        DB_URL = rawUrl;
+        DB_USER = user;
+        DB_PASSWORD = pass;
+
+        return DriverManager.getConnection(rawUrl, user, pass);
     }
 
     
