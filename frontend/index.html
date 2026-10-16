@@ -128,7 +128,7 @@
             </div>
             <p id="loginPasswordErr" class="text-xs text-red-600 mt-1.5 font-medium hidden"></p>
           </div>
-          <button type="submit" class="pill-mint w-full py-3.5 text-xs font-bold uppercase tracking-wider shadow-lg mt-2">
+          <button id="loginSubmitBtn" type="submit" class="pill-mint w-full py-3.5 text-xs font-bold uppercase tracking-wider shadow-lg mt-2">
             Sign In to Account
           </button>
         </form>
@@ -182,7 +182,7 @@
               <p id="regRollErr" class="text-xs text-red-600 mt-1 font-medium hidden"></p>
             </div>
           </div>
-          <button type="submit" class="pill-mint w-full py-3.5 text-xs font-bold uppercase tracking-wider shadow-lg mt-2">
+          <button id="registerSubmitBtn" type="submit" class="pill-mint w-full py-3.5 text-xs font-bold uppercase tracking-wider shadow-lg mt-2">
             Create System Account
           </button>
         </form>
@@ -266,7 +266,7 @@
                 </div>
               </div>
 
-              <button type="submit" class="pill-mint px-7 py-3 text-xs font-bold uppercase tracking-wider shadow-md">
+              <button id="grievanceSubmitBtn" type="submit" class="pill-mint px-7 py-3 text-xs font-bold uppercase tracking-wider shadow-md">
                 Submit Grievance
               </button>
             </form>
@@ -301,7 +301,7 @@
                   <input id="mTime" type="datetime-local" class="glass-input w-full px-4 py-2.5 rounded-2xl text-sm">
                 </div>
               </div>
-              <button type="submit" class="pill-mint px-7 py-3 text-xs font-bold uppercase tracking-wider shadow-md">
+              <button id="meetingReqSubmitBtn" type="submit" class="pill-mint px-7 py-3 text-xs font-bold uppercase tracking-wider shadow-md">
                 Submit Meeting Request
               </button>
             </form>
@@ -395,7 +395,7 @@
                 </select>
               </div>
               <div>
-                <button type="submit" class="pill-mint w-full py-2.5 text-xs font-bold uppercase tracking-wider shadow-md">
+                <button id="allocSubmitBtn" type="submit" class="pill-mint w-full py-2.5 text-xs font-bold uppercase tracking-wider shadow-md">
                   Assign Mentor
                 </button>
               </div>
@@ -501,7 +501,7 @@
       </div>
       <div class="flex justify-end gap-2.5 pt-2">
         <button onclick="closeModal('statusModal')" class="pill-btn px-4 py-2 text-xs uppercase">Cancel</button>
-        <button onclick="submitStatusUpdate()" class="pill-mint px-5 py-2 text-xs font-bold uppercase tracking-wider">Save Status</button>
+        <button id="modalStatusSubmitBtn" onclick="submitStatusUpdate(this)" class="pill-mint px-5 py-2 text-xs font-bold uppercase tracking-wider">Save Status</button>
       </div>
     </div>
   </div>
@@ -509,7 +509,7 @@
   
   <div id="escalateModal" class="fixed inset-0 z-50 hidden bg-titanium-900/40 backdrop-blur-md flex items-center justify-center p-4">
     <div class="glass-panel rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-4 shadow-2xl border-red-300">
-      <div class="flex justify-between items-center border-b border-red-200 pb-3">
+      <div class="flex justify-between items-center border-red-200 pb-3">
         <h3 class="text-sm font-extrabold text-red-600 uppercase tracking-wider">Escalate Delayed Grievance</h3>
         <button onclick="closeModal('escalateModal')" class="text-titanium-500 hover:text-black font-bold text-lg">&times;</button>
       </div>
@@ -520,7 +520,7 @@
       </div>
       <div class="flex justify-end gap-2.5 pt-2">
         <button onclick="closeModal('escalateModal')" class="pill-btn px-4 py-2 text-xs uppercase">Cancel</button>
-        <button onclick="submitEscalation()" class="pill-black px-5 py-2 text-xs font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700">Confirm Escalation</button>
+        <button id="modalEscalateSubmitBtn" onclick="submitEscalation(this)" class="pill-black px-5 py-2 text-xs font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700">Confirm Escalation</button>
       </div>
     </div>
   </div>
@@ -551,7 +551,7 @@
       </div>
       <div class="flex justify-end gap-2.5 pt-2">
         <button onclick="closeModal('meetingModal')" class="pill-btn px-4 py-2 text-xs uppercase">Cancel</button>
-        <button onclick="submitMeetingUpdate()" class="pill-mint px-5 py-2 text-xs font-bold uppercase tracking-wider">Update Session</button>
+        <button id="modalMeetingSubmitBtn" onclick="submitMeetingUpdate(this)" class="pill-mint px-5 py-2 text-xs font-bold uppercase tracking-wider">Update Session</button>
       </div>
     </div>
   </div>

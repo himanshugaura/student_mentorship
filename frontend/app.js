@@ -87,14 +87,45 @@ function quickLogin(email, password) {
   handleLoginSubmit(new Event("submit"));
 }
 
+function setButtonLoading(btn, isLoading, loadingText = "Processing...") {
+  if (!btn) return;
+  if (isLoading) {
+    if (btn.dataset.loading === "true") return false;
+    btn.dataset.loading = "true";
+    btn.dataset.originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add("opacity-60", "cursor-not-allowed", "pointer-events-none");
+    btn.innerHTML = `
+      <span class="inline-flex items-center justify-center gap-2">
+        <svg class="animate-spin -ml-1 mr-1 h-3.5 w-3.5 text-current inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>${loadingText}</span>
+      </span>
+    `;
+    return true;
+  } else {
+    btn.dataset.loading = "false";
+    btn.disabled = false;
+    btn.classList.remove("opacity-60", "cursor-not-allowed", "pointer-events-none");
+    if (btn.dataset.originalHtml) {
+      btn.innerHTML = btn.dataset.originalHtml;
+    }
+    return true;
+  }
+}
+
 async function handleLoginSubmit(event) {
   event.preventDefault();
   clearErrors();
 
+  const btn = event.submitter || document.getElementById("loginSubmitBtn") || (event.target && event.target.querySelector("button[type='submit']"));
+  if (btn && btn.dataset.loading === "true") return;
+
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value.trim();
 
-  
   let hasError = false;
   if (!email) {
     showError("loginEmailErr", "Email is required");
@@ -111,6 +142,7 @@ async function handleLoginSubmit(event) {
 
   if (hasError) return;
 
+  setButtonLoading(btn, true, "Signing in...");
   try {
     const res = await fetch(`${API_BASE}/login`, {
       method: "POST",
@@ -136,7 +168,6 @@ async function handleLoginSubmit(event) {
 
     localStorage.setItem("mentorship_user", JSON.stringify(currentUser));
 
-    
     if (window.PasswordCredential && navigator.credentials) {
       try {
         const cred = new PasswordCredential({
@@ -152,12 +183,17 @@ async function handleLoginSubmit(event) {
     renderApp();
   } catch (err) {
     showToast("Cannot connect to server at " + API_BASE + ". Ensure backend is running.", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
 async function handleRegisterSubmit(event) {
   event.preventDefault();
   clearErrors();
+
+  const btn = event.submitter || document.getElementById("registerSubmitBtn") || (event.target && event.target.querySelector("button[type='submit']"));
+  if (btn && btn.dataset.loading === "true") return;
 
   const name = document.getElementById("regName").value.trim();
   const email = document.getElementById("regEmail").value.trim();
@@ -167,7 +203,6 @@ async function handleRegisterSubmit(event) {
   const phone = document.getElementById("regPhone").value.trim();
   const rollNumber = document.getElementById("regRoll").value.trim();
 
-  
   let hasError = false;
   if (!name || name.length < 2) {
     showError("regNameErr", "Name must be at least 2 characters");
@@ -182,7 +217,6 @@ async function handleRegisterSubmit(event) {
     hasError = true;
   }
 
-  
   if (role === "STUDENT") {
     if (!rollNumber) {
       showError("regRollErr", "Student ID is required");
@@ -195,6 +229,7 @@ async function handleRegisterSubmit(event) {
 
   if (hasError) return;
 
+  setButtonLoading(btn, true, "Creating Account...");
   try {
     const res = await fetch(`${API_BASE}/register`, {
       method: "POST",
@@ -217,6 +252,8 @@ async function handleRegisterSubmit(event) {
     document.getElementById("loginEmail").value = email;
   } catch (err) {
     showToast("Cannot connect to backend server.", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
@@ -420,6 +457,9 @@ async function handleGrievanceSubmit(event) {
   event.preventDefault();
   clearErrors();
 
+  const btn = event.submitter || document.getElementById("grievanceSubmitBtn") || (event.target && event.target.querySelector("button[type='submit']"));
+  if (btn && btn.dataset.loading === "true") return;
+
   const title = document.getElementById("gTitle").value.trim();
   const description = document.getElementById("gDesc").value.trim();
   const category = document.getElementById("gCategory").value;
@@ -434,6 +474,7 @@ async function handleGrievanceSubmit(event) {
     return;
   }
 
+  setButtonLoading(btn, true, "Submitting Complaint...");
   try {
     const res = await fetch(`${API_BASE}/grievances`, {
       method: "POST",
@@ -459,11 +500,17 @@ async function handleGrievanceSubmit(event) {
     loadStudentData();
   } catch (err) {
     showToast("Could not submit grievance to backend.", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
 async function handleMeetingRequestSubmit(event) {
   event.preventDefault();
+
+  const btn = event.submitter || document.getElementById("meetingReqSubmitBtn") || (event.target && event.target.querySelector("button[type='submit']"));
+  if (btn && btn.dataset.loading === "true") return;
+
   const title = document.getElementById("mTitle").value.trim();
   const purpose = document.getElementById("mPurpose").value.trim();
   const meetingTime = document.getElementById("mTime").value;
@@ -473,6 +520,7 @@ async function handleMeetingRequestSubmit(event) {
     return;
   }
 
+  setButtonLoading(btn, true, "Requesting Session...");
   try {
     const res = await fetch(`${API_BASE}/meetings`, {
       method: "POST",
@@ -496,6 +544,8 @@ async function handleMeetingRequestSubmit(event) {
     loadStudentData();
   } catch (err) {
     showToast("Could not request meeting.", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
@@ -666,7 +716,7 @@ async function loadAdminData() {
               </td>
               <td class="py-3 px-3 text-right">
                 ${isAssigned ? `
-                  <button onclick="unassignMentor(${s.id})" class="pill-btn px-2.5 py-1 text-[11px] text-amber-700 border border-amber-200 hover:bg-amber-50">
+                  <button onclick="unassignMentor(${s.id}, this)" class="pill-btn px-2.5 py-1 text-[11px] text-amber-700 border border-amber-200 hover:bg-amber-50">
                     Unassign
                   </button>
                 ` : `
@@ -718,6 +768,10 @@ async function loadAdminData() {
 
 async function handleAllocateMentorSubmit(event) {
   event.preventDefault();
+
+  const btn = event.submitter || document.getElementById("allocSubmitBtn") || (event.target && event.target.querySelector("button[type='submit']"));
+  if (btn && btn.dataset.loading === "true") return;
+
   const studentId = document.getElementById("allocStudentSelect").value;
   const mentorId = document.getElementById("allocMentorSelect").value;
 
@@ -726,6 +780,7 @@ async function handleAllocateMentorSubmit(event) {
     return;
   }
 
+  setButtonLoading(btn, true, "Assigning...");
   try {
     const res = await fetch(`${API_BASE}/allocate-mentor`, {
       method: "POST",
@@ -745,11 +800,17 @@ async function handleAllocateMentorSubmit(event) {
     loadAdminData();
   } catch (err) {
     showToast("Failed to allocate mentor.", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
-async function unassignMentor(studentId) {
+async function unassignMentor(studentId, btnTrigger = null) {
+  const btn = btnTrigger || (typeof event !== 'undefined' && event?.target ? event.target : null);
+  if (btn && btn.dataset.loading === "true") return;
   if (!confirm("Are you sure you want to unassign the mentor from this student?")) return;
+
+  setButtonLoading(btn, true, "...");
   try {
     const res = await fetch(`${API_BASE}/allocate-mentor`, {
       method: "POST",
@@ -765,6 +826,8 @@ async function unassignMentor(studentId) {
     loadAdminData();
   } catch (err) {
     showToast("Failed to unassign mentor.", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
@@ -807,7 +870,7 @@ async function loadAdminUsers(roleFilter) {
         </td>
         <td class="py-3 px-3 text-right">
           ${u.id !== currentUser.id ? `
-            <button onclick="deleteUser(${u.id})" class="pill-btn px-2.5 py-1 text-[11px] text-red-600 border border-red-200 hover:bg-red-50">
+            <button onclick="deleteUser(${u.id}, this)" class="pill-btn px-2.5 py-1 text-[11px] text-red-600 border border-red-200 hover:bg-red-50">
               Delete
             </button>
           ` : `<span class="text-titanium-400 text-[10px] font-bold uppercase">Active</span>`}
@@ -817,9 +880,12 @@ async function loadAdminUsers(roleFilter) {
   } catch (e) {}
 }
 
-async function deleteUser(id) {
+async function deleteUser(id, btnTrigger = null) {
+  const btn = btnTrigger || (typeof event !== 'undefined' && event?.target ? event.target : null);
+  if (btn && btn.dataset.loading === "true") return;
   if (!confirm("Are you sure you want to delete this user?")) return;
 
+  setButtonLoading(btn, true, "...");
   try {
     const res = await fetch(`${API_BASE}/users/${id}`, { method: "DELETE" });
     const data = await res.json();
@@ -831,6 +897,8 @@ async function deleteUser(id) {
     loadAdminData();
   } catch (err) {
     showToast("Error deleting user.", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
@@ -841,11 +909,15 @@ function openStatusModal(id, currentStatus, currentRemarks) {
   document.getElementById("statusModal").classList.remove("hidden");
 }
 
-async function submitStatusUpdate() {
+async function submitStatusUpdate(btnTrigger = null) {
+  const btn = btnTrigger || document.getElementById("modalStatusSubmitBtn");
+  if (btn && btn.dataset.loading === "true") return;
+
   const id = document.getElementById("modalGrievanceId").value;
   const status = document.getElementById("modalStatusSelect").value;
   const remarks = document.getElementById("modalRemarks").value.trim();
 
+  setButtonLoading(btn, true, "Saving...");
   try {
     const res = await fetch(`${API_BASE}/grievances/${id}/status`, {
       method: "PUT",
@@ -864,6 +936,8 @@ async function submitStatusUpdate() {
     else if (currentUser.role === "ADMIN") loadAdminData();
   } catch (err) {
     showToast("Failed to update status", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
@@ -873,7 +947,10 @@ function openEscalateModal(id) {
   document.getElementById("escalateModal").classList.remove("hidden");
 }
 
-async function submitEscalation() {
+async function submitEscalation(btnTrigger = null) {
+  const btn = btnTrigger || document.getElementById("modalEscalateSubmitBtn");
+  if (btn && btn.dataset.loading === "true") return;
+
   const id = document.getElementById("escalateGrievanceId").value;
   const reason = document.getElementById("escalateReason").value.trim();
 
@@ -882,6 +959,7 @@ async function submitEscalation() {
     return;
   }
 
+  setButtonLoading(btn, true, "Escalating...");
   try {
     const res = await fetch(`${API_BASE}/grievances/${id}/escalate`, {
       method: "PUT",
@@ -899,6 +977,8 @@ async function submitEscalation() {
     loadStudentData();
   } catch (err) {
     showToast("Failed to escalate", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
@@ -910,12 +990,16 @@ function openMeetingModal(id, status, venue, feedback) {
   document.getElementById("meetingModal").classList.remove("hidden");
 }
 
-async function submitMeetingUpdate() {
+async function submitMeetingUpdate(btnTrigger = null) {
+  const btn = btnTrigger || document.getElementById("modalMeetingSubmitBtn");
+  if (btn && btn.dataset.loading === "true") return;
+
   const id = document.getElementById("modalMeetingId").value;
   const status = document.getElementById("modalMeetingStatus").value;
   const venueOrLink = document.getElementById("modalMeetingVenue").value.trim();
   const feedback = document.getElementById("modalMeetingFeedback").value.trim();
 
+  setButtonLoading(btn, true, "Updating...");
   try {
     const res = await fetch(`${API_BASE}/meetings/${id}`, {
       method: "PUT",
@@ -933,6 +1017,8 @@ async function submitMeetingUpdate() {
     loadMentorData();
   } catch (err) {
     showToast("Failed to update meeting", true);
+  } finally {
+    setButtonLoading(btn, false);
   }
 }
 
