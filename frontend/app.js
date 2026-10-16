@@ -1,0 +1,1110 @@
+
+
+const API_BASE = window.location.origin && window.location.origin.startsWith("http")
+  ? `${window.location.origin}/api`
+  : "http://localhost:8080/api";
+let currentUser = null;
+
+window.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("mentorship_user");
+  if (saved) {
+    try {
+      currentUser = JSON.parse(saved);
+    } catch (e) {
+      console.warn("Corrupt saved user session, clearing:", e);
+      localStorage.removeItem("mentorship_user");
+      currentUser = null;
+    }
+
+    if (currentUser) {
+      try {
+        renderApp();
+      } catch (err) {
+        console.error("Error rendering dashboard:", err);
+      }
+    }
+  }
+});
+
+function switchAuthTab(tab) {
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+  const tabLoginBtn = document.getElementById("tabLoginBtn");
+  const tabRegisterBtn = document.getElementById("tabRegisterBtn");
+
+  if (tab === "login") {
+    loginForm.classList.remove("hidden");
+    registerForm.classList.add("hidden");
+    tabLoginBtn.className = "flex-1 py-2 text-xs font-bold rounded-full transition-all bg-mint text-titanium-900 shadow-sm uppercase tracking-wider";
+    tabRegisterBtn.className = "flex-1 py-2 text-xs font-bold rounded-full transition-all text-titanium-600 hover:text-titanium-900 uppercase tracking-wider";
+  } else {
+    loginForm.classList.add("hidden");
+    registerForm.classList.remove("hidden");
+    tabRegisterBtn.className = "flex-1 py-2 text-xs font-bold rounded-full transition-all bg-mint text-titanium-900 shadow-sm uppercase tracking-wider";
+    tabLoginBtn.className = "flex-1 py-2 text-xs font-bold rounded-full transition-all text-titanium-600 hover:text-titanium-900 uppercase tracking-wider";
+  }
+}
+
+function toggleRollNumberField() {
+  const role = document.getElementById("regRole").value;
+  const group = document.getElementById("rollNumberGroup");
+  if (role === "STUDENT") {
+    group.classList.remove("hidden");
+  } else {
+    group.classList.add("hidden");
+  }
+}
+
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === "password";
+  input.type = isPassword ? "text" : "password";
+
+  if (isPassword) {
+    
+    btn.innerHTML = `
+      <svg class="w-4 h-4 text-titanium-800" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+      </svg>
+    `;
+    btn.title = "Hide Password";
+  } else {
+    
+    btn.innerHTML = `
+      <svg class="w-4 h-4 text-titanium-500 hover:text-titanium-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+    `;
+    btn.title = "Show Password";
+  }
+}
+
+function quickLogin(email, password) {
+  document.getElementById("loginEmail").value = email;
+  document.getElementById("loginPassword").value = password;
+  handleLoginSubmit(new Event("submit"));
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  clearErrors();
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+
+  
+  let hasError = false;
+  if (!email) {
+    showError("loginEmailErr", "Email is required");
+    hasError = true;
+  } else if (!validateEmail(email)) {
+    showError("loginEmailErr", "Please enter a valid email address");
+    hasError = true;
+  }
+
+  if (!password) {
+    showError("loginPasswordErr", "Password is required");
+    hasError = true;
+  }
+
+  if (hasError) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Login failed", true);
+      return;
+    }
+
+    currentUser = data.user || {
+      id: data.userId,
+      name: data.name,
+      email: data.email,
+      role: data.role,
+      department: data.department,
+      mentorId: data.mentorId,
+      mentorName: data.mentorName
+    };
+
+    localStorage.setItem("mentorship_user", JSON.stringify(currentUser));
+
+    
+    if (window.PasswordCredential && navigator.credentials) {
+      try {
+        const cred = new PasswordCredential({
+          id: email,
+          password: password,
+          name: currentUser.name
+        });
+        navigator.credentials.store(cred).catch(() => {});
+      } catch (e) {}
+    }
+
+    showToast(`Welcome, ${currentUser.name}!`);
+    renderApp();
+  } catch (err) {
+    showToast("Cannot connect to server at " + API_BASE + ". Ensure backend is running.", true);
+  }
+}
+
+async function handleRegisterSubmit(event) {
+  event.preventDefault();
+  clearErrors();
+
+  const name = document.getElementById("regName").value.trim();
+  const email = document.getElementById("regEmail").value.trim();
+  const password = document.getElementById("regPassword").value.trim();
+  const role = document.getElementById("regRole").value;
+  const department = document.getElementById("regDept").value.trim();
+  const phone = document.getElementById("regPhone").value.trim();
+  const rollNumber = document.getElementById("regRoll").value.trim();
+
+  
+  let hasError = false;
+  if (!name || name.length < 2) {
+    showError("regNameErr", "Name must be at least 2 characters");
+    hasError = true;
+  }
+  if (!email || !validateEmail(email)) {
+    showError("regEmailErr", "Please enter a valid email address");
+    hasError = true;
+  }
+  if (!password || password.length < 4) {
+    showError("regPasswordErr", "Password must be at least 4 characters");
+    hasError = true;
+  }
+
+  
+  if (role === "STUDENT") {
+    if (!rollNumber) {
+      showError("regRollErr", "Student ID is required");
+      hasError = true;
+    } else if (!/^\d{8}$/.test(rollNumber)) {
+      showError("regRollErr", "Student ID must be exactly 8 digits (e.g. 24042824)");
+      hasError = true;
+    }
+  }
+
+  if (hasError) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role, department, phone, rollNumber })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Registration failed", true);
+      if (data.error && data.error.includes("Student ID")) {
+        showError("regRollErr", data.error);
+      }
+      return;
+    }
+
+    showToast("Registration successful! Please sign in.");
+    document.getElementById("registerForm").reset();
+    switchAuthTab("login");
+    document.getElementById("loginEmail").value = email;
+  } catch (err) {
+    showToast("Cannot connect to backend server.", true);
+  }
+}
+
+function logout() {
+  currentUser = null;
+  localStorage.removeItem("mentorship_user");
+  renderApp();
+  showToast("Logged out successfully");
+}
+
+function renderApp() {
+  const authSection = document.getElementById("authSection");
+  const dashboardSection = document.getElementById("dashboardSection");
+  const navUserSection = document.getElementById("navUserSection");
+
+  if (!currentUser) {
+    authSection.classList.remove("hidden");
+    dashboardSection.classList.add("hidden");
+    navUserSection.classList.add("hidden");
+    return;
+  }
+
+  authSection.classList.add("hidden");
+  dashboardSection.classList.remove("hidden");
+  navUserSection.classList.remove("hidden");
+
+  
+  document.getElementById("navUserName").textContent = currentUser.name || currentUser.email;
+  document.getElementById("navUserRole").textContent = currentUser.role;
+  document.getElementById("navUserDept").textContent = currentUser.department || "";
+
+  renderRoleTabs();
+}
+
+function renderRoleTabs() {
+  const tabsContainer = document.getElementById("roleTabs");
+  tabsContainer.innerHTML = "";
+
+  const role = (currentUser.role || "").toUpperCase();
+
+  if (role === "STUDENT") {
+    tabsContainer.innerHTML = `
+      <button onclick="switchTab('studentGrievancesTab', this)" class="nav-tab pill-mint px-5 py-2 text-xs font-bold uppercase tracking-wider">
+        My Grievances
+      </button>
+      <button onclick="switchTab('studentMeetingsTab', this)" class="nav-tab pill-btn px-5 py-2 text-xs font-bold uppercase tracking-wider text-titanium-600">
+        Mentorship & Meetings
+      </button>
+    `;
+    switchTab("studentGrievancesTab");
+    loadStudentData();
+
+  } else if (role === "MENTOR") {
+    tabsContainer.innerHTML = `
+      <button onclick="switchTab('mentorStudentsTab', this)" class="nav-tab pill-mint px-5 py-2 text-xs font-bold uppercase tracking-wider">
+        Assigned Students
+      </button>
+      <button onclick="switchTab('mentorGrievancesTab', this)" class="nav-tab pill-btn px-5 py-2 text-xs font-bold uppercase tracking-wider text-titanium-600">
+        Student Grievances
+      </button>
+      <button onclick="switchTab('mentorMeetingsTab', this)" class="nav-tab pill-btn px-5 py-2 text-xs font-bold uppercase tracking-wider text-titanium-600">
+        Meeting Requests
+      </button>
+    `;
+    switchTab("mentorStudentsTab");
+    loadMentorData();
+
+  } else if (role === "ADMIN") {
+    tabsContainer.innerHTML = `
+      <button onclick="switchTab('adminStatsTab', this)" class="nav-tab pill-mint px-5 py-2 text-xs font-bold uppercase tracking-wider">
+        Overview & Complaints
+      </button>
+      <button onclick="switchTab('adminUsersTab', this)" class="nav-tab pill-btn px-5 py-2 text-xs font-bold uppercase tracking-wider text-titanium-600">
+        User Directory
+      </button>
+    `;
+    switchTab("adminStatsTab");
+    loadAdminData();
+  }
+}
+
+function switchTab(tabId, clickedBtn = null) {
+  
+  document.querySelectorAll(".dashboard-tab").forEach(tab => tab.classList.add("hidden"));
+  const target = document.getElementById(tabId);
+  if (target) target.classList.remove("hidden");
+
+  
+  document.querySelectorAll(".nav-tab").forEach(btn => {
+    btn.className = "nav-tab pill-btn px-5 py-2 text-xs font-bold uppercase tracking-wider text-titanium-600";
+  });
+
+  if (clickedBtn && clickedBtn.classList && clickedBtn.classList.contains("nav-tab")) {
+    clickedBtn.className = "nav-tab pill-mint px-5 py-2 text-xs font-bold uppercase tracking-wider";
+  } else {
+    
+    const activeBtn = document.querySelector(`.nav-tab[onclick*="'${tabId}'"]`);
+    if (activeBtn) {
+      activeBtn.className = "nav-tab pill-mint px-5 py-2 text-xs font-bold uppercase tracking-wider";
+    }
+  }
+}
+
+async function loadStudentData() {
+  
+  const mentorDisplay = document.getElementById("studentMentorDisplay");
+  if (currentUser.mentorName) {
+    mentorDisplay.textContent = currentUser.mentorName;
+  } else {
+    mentorDisplay.textContent = "Not yet allocated. An administrator will assign your mentor shortly.";
+  }
+
+  
+  try {
+    const res = await fetch(`${API_BASE}/grievances/student/${currentUser.id}`);
+    const list = await res.json();
+    renderStudentGrievances(list);
+  } catch (err) {
+    document.getElementById("studentGrievancesList").innerHTML = `<div class="text-xs text-red-600 py-4">Failed to load grievances from backend.</div>`;
+  }
+
+  
+  try {
+    const res = await fetch(`${API_BASE}/meetings/student/${currentUser.id}`);
+    const meetings = await res.json();
+    renderStudentMeetings(meetings);
+  } catch (err) {
+    document.getElementById("studentMeetingsList").innerHTML = `<div class="text-xs text-red-600 py-4">Failed to load meetings.</div>`;
+  }
+}
+
+function renderStudentGrievances(grievances) {
+  const container = document.getElementById("studentGrievancesList");
+  if (!grievances || grievances.length === 0) {
+    container.innerHTML = `<div class="text-xs text-titanium-600 text-center py-6">You have not submitted any grievances yet.</div>`;
+    return;
+  }
+
+  container.innerHTML = grievances.map(g => `
+    <div class="glass-panel rounded-2xl p-5 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(g.title)}</h4>
+        <div class="flex items-center gap-2">
+          ${renderPriorityBadge(g.priority)}
+          ${renderStatusBadge(g.status, g.isEscalated)}
+        </div>
+      </div>
+      <p class="text-xs text-titanium-700 leading-relaxed">${escapeHtml(g.description)}</p>
+      
+      <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-titanium-600 pt-2 border-t border-black/5">
+        <div>Category: <span class="text-titanium-900 font-bold">${escapeHtml(g.category || "General")}</span> • Submitted: ${g.createdAt || ""}</div>
+        <div>
+          ${!g.isEscalated && g.status !== 'Resolved' ? `
+            <button onclick="openEscalateModal(${g.id})" class="pill-btn px-3 py-1 text-xs text-red-600 border border-red-200 hover:bg-red-50">
+              Escalate Complaint
+            </button>
+          ` : ""}
+        </div>
+      </div>
+
+      ${g.remarks ? `
+        <div class="mt-2.5 p-3 rounded-2xl bg-white/60 border border-white/80 text-xs shadow-sm">
+          <span class="text-titanium-900 font-extrabold uppercase tracking-wider block text-[10px] flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-mint"></span> Faculty Resolution Notes:
+          </span>
+          <p class="text-titanium-800 mt-1">${escapeHtml(g.remarks)}</p>
+        </div>
+      ` : ""}
+    </div>
+  `).join("");
+}
+
+function renderStudentMeetings(meetings) {
+  const container = document.getElementById("studentMeetingsList");
+  if (!meetings || meetings.length === 0) {
+    container.innerHTML = `<div class="text-xs text-titanium-600 text-center py-6">No meeting requests found.</div>`;
+    return;
+  }
+
+  container.innerHTML = meetings.map(m => `
+    <div class="glass-panel rounded-2xl p-5 space-y-3">
+      <div class="flex justify-between items-center">
+        <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(m.title)}</h4>
+        <span class="pill-btn px-3 py-0.5 text-xs font-bold text-titanium-800">${escapeHtml(m.status)}</span>
+      </div>
+      <p class="text-xs text-titanium-700 leading-relaxed">${escapeHtml(m.purpose || "Guidance session")}</p>
+      <div class="text-xs text-titanium-600">
+        Mentor: <span class="text-titanium-900 font-bold">${escapeHtml(m.mentorName || "Faculty Mentor")}</span> • Date/Time: <span class="text-titanium-900 font-medium">${m.meetingTime || "TBD"}</span>
+      </div>
+      ${m.venueOrLink ? `
+        <div class="text-xs text-titanium-900 font-semibold">Venue / Link: <span class="underline text-emerald-700">${escapeHtml(m.venueOrLink)}</span></div>
+      ` : ""}
+      ${m.feedback ? `
+        <div class="text-xs text-titanium-700 border-t border-black/5 pt-2">Notes/Feedback: ${escapeHtml(m.feedback)}</div>
+      ` : ""}
+    </div>
+  `).join("");
+}
+
+async function handleGrievanceSubmit(event) {
+  event.preventDefault();
+  clearErrors();
+
+  const title = document.getElementById("gTitle").value.trim();
+  const description = document.getElementById("gDesc").value.trim();
+  const category = document.getElementById("gCategory").value;
+  const priority = document.getElementById("gPriority").value;
+
+  if (!title) {
+    showError("gTitleErr", "Title is required");
+    return;
+  }
+  if (!description) {
+    showError("gDescErr", "Description is required");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/grievances`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        description,
+        category,
+        priority,
+        studentId: currentUser.id,
+        studentName: currentUser.name
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Submission failed", true);
+      return;
+    }
+
+    showToast("Grievance submitted successfully!");
+    document.getElementById("grievanceForm").reset();
+    loadStudentData();
+  } catch (err) {
+    showToast("Could not submit grievance to backend.", true);
+  }
+}
+
+async function handleMeetingRequestSubmit(event) {
+  event.preventDefault();
+  const title = document.getElementById("mTitle").value.trim();
+  const purpose = document.getElementById("mPurpose").value.trim();
+  const meetingTime = document.getElementById("mTime").value;
+
+  if (!title) {
+    showToast("Session title is required", true);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/meetings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        purpose,
+        meetingTime: meetingTime.replace("T", " "),
+        studentId: currentUser.id
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Meeting request failed", true);
+      return;
+    }
+
+    showToast("Meeting requested successfully!");
+    document.getElementById("meetingRequestForm").reset();
+    loadStudentData();
+  } catch (err) {
+    showToast("Could not request meeting.", true);
+  }
+}
+
+async function loadMentorData() {
+  
+  try {
+    const res = await fetch(`${API_BASE}/mentors/${currentUser.id}/students`);
+    const students = await res.json();
+    const container = document.getElementById("mentorStudentsList");
+    if (!students || students.length === 0) {
+      container.innerHTML = `<div class="text-xs text-titanium-600 py-4 col-span-3">No students allocated to you yet.</div>`;
+    } else {
+      container.innerHTML = students.map(s => `
+        <div class="glass-panel rounded-2xl p-5 space-y-2">
+          <div class="flex justify-between items-center">
+            <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(s.name)}</h4>
+          </div>
+          <div class="text-xs text-titanium-700">Student ID: <span class="font-bold text-titanium-900">${escapeHtml(s.rollNumber || "N/A")}</span></div>
+          <div class="text-xs text-titanium-700">Email: <span class="font-medium text-titanium-900">${escapeHtml(s.email)}</span></div>
+          <div class="text-xs text-titanium-600">Dept: ${escapeHtml(s.department || "BCA")}</div>
+        </div>
+      `).join("");
+    }
+  } catch (e) {}
+
+  
+  try {
+    const res = await fetch(`${API_BASE}/grievances/mentor/${currentUser.id}`);
+    const grievances = await res.json();
+    const container = document.getElementById("mentorGrievancesList");
+    if (!grievances || grievances.length === 0) {
+      container.innerHTML = `<div class="text-xs text-titanium-600 py-6 text-center">No student complaints assigned to your mentorship.</div>`;
+    } else {
+      container.innerHTML = grievances.map(g => `
+        <div class="glass-panel rounded-2xl p-5 space-y-3">
+          <div class="flex justify-between items-center">
+            <div>
+              <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(g.title)}</h4>
+              <span class="text-xs text-titanium-600">Student: <span class="text-titanium-900 font-bold">${escapeHtml(g.studentName || "Student")}</span></span>
+            </div>
+            <div class="flex items-center gap-2">
+              ${renderPriorityBadge(g.priority)}
+              ${renderStatusBadge(g.status, g.isEscalated)}
+              <button onclick="openStatusModal(${g.id}, '${g.status}', '${escapeHtml(g.remarks || "")}')" class="pill-mint px-3.5 py-1 text-xs font-bold">
+                Update
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-titanium-700 leading-relaxed">${escapeHtml(g.description)}</p>
+          <div class="text-xs text-titanium-600">Category: ${escapeHtml(g.category || "General")} • Submitted: ${g.createdAt || ""}</div>
+          ${g.remarks ? `<div class="p-2.5 rounded-xl bg-white/60 border border-white/80 text-xs text-titanium-800">Remarks: ${escapeHtml(g.remarks)}</div>` : ""}
+        </div>
+      `).join("");
+    }
+  } catch (e) {}
+
+  
+  try {
+    const res = await fetch(`${API_BASE}/meetings/mentor/${currentUser.id}`);
+    const meetings = await res.json();
+    const container = document.getElementById("mentorMeetingsList");
+    if (!meetings || meetings.length === 0) {
+      container.innerHTML = `<div class="text-xs text-titanium-600 py-6 text-center">No guidance meeting requests.</div>`;
+    } else {
+      container.innerHTML = meetings.map(m => `
+        <div class="glass-panel rounded-2xl p-5 space-y-3">
+          <div class="flex justify-between items-center">
+            <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(m.title)}</h4>
+            <div class="flex items-center gap-2">
+              <span class="pill-btn px-3 py-0.5 text-xs font-bold text-titanium-800">${escapeHtml(m.status)}</span>
+              <button onclick="openMeetingModal(${m.id}, '${m.status}', '${escapeHtml(m.venueOrLink || "")}', '${escapeHtml(m.feedback || "")}')" class="pill-mint px-3.5 py-1 text-xs font-bold">
+                Manage
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-titanium-700 leading-relaxed">Purpose: ${escapeHtml(m.purpose || "N/A")}</p>
+          <div class="text-xs text-titanium-600">Student: <span class="text-titanium-900 font-bold">${escapeHtml(m.studentName || "Student")}</span> • Time: ${m.meetingTime || "Unspecified"}</div>
+          ${m.venueOrLink ? `<div class="text-xs text-titanium-900 font-semibold">Venue/Link: ${escapeHtml(m.venueOrLink)}</div>` : ""}
+        </div>
+      `).join("");
+    }
+  } catch (e) {}
+}
+
+async function loadAdminData() {
+  
+  try {
+    const res = await fetch(`${API_BASE}/admin/stats`);
+    const stats = await res.json();
+    document.getElementById("statTotalStudents").textContent = stats.totalStudents || 0;
+    document.getElementById("statTotalMentors").textContent = stats.totalMentors || 0;
+    document.getElementById("statTotalGrievances").textContent = stats.totalGrievances || 0;
+    document.getElementById("statPendingGrievances").textContent = stats.pendingGrievances || 0;
+    document.getElementById("statResolvedGrievances").textContent = stats.resolvedGrievances || 0;
+    document.getElementById("statEscalatedGrievances").textContent = stats.escalatedGrievances || 0;
+  } catch (e) {}
+
+  
+  try {
+    const [studentsRes, mentorsRes] = await Promise.all([
+      fetch(`${API_BASE}/users?role=STUDENT`),
+      fetch(`${API_BASE}/users?role=MENTOR`)
+    ]);
+    const students = await studentsRes.json();
+    const mentors = await mentorsRes.json();
+
+    const unassignedStudents = (students || []).filter(s => !s.mentorId && (!s.mentorName || s.mentorName.trim() === ""));
+    const assignedStudents = (students || []).filter(s => s.mentorId || (s.mentorName && s.mentorName.trim() !== ""));
+
+    const studentSelect = document.getElementById("allocStudentSelect");
+    const mentorSelect = document.getElementById("allocMentorSelect");
+    const assignBtn = document.querySelector("#allocateMentorForm button[type='submit']");
+
+    
+    if (unassignedStudents.length === 0) {
+      studentSelect.innerHTML = `<option value="" disabled selected>All students currently have mentors assigned</option>`;
+      studentSelect.disabled = true;
+      if (assignBtn) assignBtn.disabled = true;
+    } else {
+      studentSelect.disabled = false;
+      if (assignBtn) assignBtn.disabled = false;
+      studentSelect.innerHTML = `<option value="">Choose an Unassigned Student (${unassignedStudents.length} available)...</option>` +
+        unassignedStudents.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (${escapeHtml(s.email)})${s.rollNumber ? ' - ID: ' + escapeHtml(s.rollNumber) : ''}</option>`).join("");
+    }
+
+    mentorSelect.innerHTML = `<option value="">Choose a Mentor...</option>` +
+      mentors.map(m => `<option value="${m.id}">${escapeHtml(m.name)} (${escapeHtml(m.department || 'Faculty')})</option>`).join("");
+
+    
+    const tableBody = document.getElementById("adminStudentMentorsTableBody");
+    const countBadge = document.getElementById("adminStudentsAllocationCount");
+    if (countBadge) {
+      countBadge.textContent = `${assignedStudents.length} Assigned • ${unassignedStudents.length} Unassigned`;
+    }
+
+    if (tableBody) {
+      if (!students || students.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-xs text-titanium-600">No students registered in the system yet.</td></tr>`;
+      } else {
+        tableBody.innerHTML = students.map(s => {
+          const isAssigned = Boolean(s.mentorId || (s.mentorName && s.mentorName.trim() !== ""));
+          return `
+            <tr class="border-b border-black/5 hover:bg-white/40 transition">
+              <td class="py-3 px-3 text-titanium-900 font-extrabold text-xs">
+                ${escapeHtml(s.name)}
+              </td>
+              <td class="py-3 px-3 text-titanium-700 font-mono text-xs">
+                ${escapeHtml(s.rollNumber || "-")}
+              </td>
+              <td class="py-3 px-3 text-titanium-600 text-xs">
+                ${escapeHtml(s.email)}
+              </td>
+              <td class="py-3 px-3 text-titanium-600 text-xs">
+                ${escapeHtml(s.department || "-")}
+              </td>
+              <td class="py-3 px-3">
+                ${isAssigned ? `
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-mint/20 text-titanium-900 border border-mint/40">
+                    <span class="w-1.5 h-1.5 rounded-full bg-mint"></span>
+                    ${escapeHtml(s.mentorName || "Assigned")}
+                  </span>
+                ` : `
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    Unassigned
+                  </span>
+                `}
+              </td>
+              <td class="py-3 px-3 text-right">
+                ${isAssigned ? `
+                  <button onclick="unassignMentor(${s.id})" class="pill-btn px-2.5 py-1 text-[11px] text-amber-700 border border-amber-200 hover:bg-amber-50">
+                    Unassign
+                  </button>
+                ` : `
+                  <button onclick="focusAllocation(${s.id})" class="pill-mint px-2.5 py-1 text-[11px] font-bold">
+                    Assign
+                  </button>
+                `}
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+    }
+  } catch (e) {}
+
+  
+  try {
+    const res = await fetch(`${API_BASE}/grievances`);
+    const grievances = await res.json();
+    const container = document.getElementById("adminGrievancesList");
+    if (!grievances || grievances.length === 0) {
+      container.innerHTML = `<div class="text-xs text-titanium-600 py-6 text-center">No grievances in system.</div>`;
+    } else {
+      container.innerHTML = grievances.map(g => `
+        <div class="glass-panel rounded-2xl p-5 space-y-3">
+          <div class="flex justify-between items-center">
+            <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(g.title)}</h4>
+            <div class="flex items-center gap-2">
+              ${renderPriorityBadge(g.priority)}
+              ${renderStatusBadge(g.status, g.isEscalated)}
+              <button onclick="openStatusModal(${g.id}, '${g.status}', '${escapeHtml(g.remarks || "")}')" class="pill-mint px-3.5 py-1 text-xs font-bold">
+                Update
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-titanium-700 leading-relaxed">${escapeHtml(g.description)}</p>
+          <div class="text-xs text-titanium-600">
+            Student: <span class="text-titanium-900 font-bold">${escapeHtml(g.studentName || "")}</span> • Category: ${escapeHtml(g.category || "General")} • Date: ${g.createdAt || ""}
+          </div>
+          ${g.remarks ? `<div class="p-2.5 rounded-xl bg-white/60 border border-white/80 text-xs text-titanium-800">Remarks: ${escapeHtml(g.remarks)}</div>` : ""}
+        </div>
+      `).join("");
+    }
+  } catch (e) {}
+
+  
+  loadAdminUsers();
+}
+
+async function handleAllocateMentorSubmit(event) {
+  event.preventDefault();
+  const studentId = document.getElementById("allocStudentSelect").value;
+  const mentorId = document.getElementById("allocMentorSelect").value;
+
+  if (!studentId || !mentorId) {
+    showToast("Please select both a student and a mentor", true);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/allocate-mentor`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentId: Number(studentId), mentorId: Number(mentorId) })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Allocation failed", true);
+      return;
+    }
+
+    showToast("Mentor allocated successfully!");
+    const form = document.getElementById("allocateMentorForm");
+    if (form) form.reset();
+    loadAdminData();
+  } catch (err) {
+    showToast("Failed to allocate mentor.", true);
+  }
+}
+
+async function unassignMentor(studentId) {
+  if (!confirm("Are you sure you want to unassign the mentor from this student?")) return;
+  try {
+    const res = await fetch(`${API_BASE}/allocate-mentor`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentId: Number(studentId), mentorId: 0 })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Failed to unassign mentor", true);
+      return;
+    }
+    showToast("Mentor unassigned successfully");
+    loadAdminData();
+  } catch (err) {
+    showToast("Failed to unassign mentor.", true);
+  }
+}
+
+function focusAllocation(studentId) {
+  const studentSelect = document.getElementById("allocStudentSelect");
+  if (studentSelect) {
+    studentSelect.disabled = false;
+    studentSelect.value = studentId;
+    const form = document.getElementById("allocateMentorForm");
+    if (form) {
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    const mentorSelect = document.getElementById("allocMentorSelect");
+    if (mentorSelect) mentorSelect.focus();
+  }
+}
+
+async function loadAdminUsers(roleFilter) {
+  try {
+    const url = roleFilter ? `${API_BASE}/users?role=${roleFilter}` : `${API_BASE}/users`;
+    const res = await fetch(url);
+    const users = await res.json();
+    const tbody = document.getElementById("adminUsersTableBody");
+
+    if (!users || users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-titanium-600">No users found</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = users.map(u => `
+      <tr class="border-b border-black/5 hover:bg-white/40">
+        <td class="py-3 px-3 text-titanium-900 font-extrabold">${escapeHtml(u.name)}</td>
+        <td class="py-3 px-3 text-titanium-700 font-medium">${escapeHtml(u.email)}</td>
+        <td class="py-3 px-3">
+          <span class="pill-btn px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-titanium-900">${u.role}</span>
+        </td>
+        <td class="py-3 px-3 text-titanium-600">${escapeHtml(u.department || "-")}</td>
+        <td class="py-3 px-3">
+          ${u.role === 'STUDENT' ? (u.mentorName ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-mint/20 text-titanium-900 border border-mint/40"><span class="w-1.5 h-1.5 rounded-full bg-mint"></span>${escapeHtml(u.mentorName)}</span>` : `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Unassigned</span>`) : '-'}
+        </td>
+        <td class="py-3 px-3 text-right">
+          ${u.id !== currentUser.id ? `
+            <button onclick="deleteUser(${u.id})" class="pill-btn px-2.5 py-1 text-[11px] text-red-600 border border-red-200 hover:bg-red-50">
+              Delete
+            </button>
+          ` : `<span class="text-titanium-400 text-[10px] font-bold uppercase">Active</span>`}
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {}
+}
+
+async function deleteUser(id) {
+  if (!confirm("Are you sure you want to delete this user?")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/users/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Could not delete user", true);
+      return;
+    }
+    showToast("User deleted successfully");
+    loadAdminData();
+  } catch (err) {
+    showToast("Error deleting user.", true);
+  }
+}
+
+function openStatusModal(id, currentStatus, currentRemarks) {
+  document.getElementById("modalGrievanceId").value = id;
+  if (currentStatus) document.getElementById("modalStatusSelect").value = currentStatus;
+  document.getElementById("modalRemarks").value = currentRemarks || "";
+  document.getElementById("statusModal").classList.remove("hidden");
+}
+
+async function submitStatusUpdate() {
+  const id = document.getElementById("modalGrievanceId").value;
+  const status = document.getElementById("modalStatusSelect").value;
+  const remarks = document.getElementById("modalRemarks").value.trim();
+
+  try {
+    const res = await fetch(`${API_BASE}/grievances/${id}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, remarks })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Failed to update", true);
+      return;
+    }
+
+    showToast("Status updated successfully!");
+    closeModal("statusModal");
+    if (currentUser.role === "MENTOR") loadMentorData();
+    else if (currentUser.role === "ADMIN") loadAdminData();
+  } catch (err) {
+    showToast("Failed to update status", true);
+  }
+}
+
+function openEscalateModal(id) {
+  document.getElementById("escalateGrievanceId").value = id;
+  document.getElementById("escalateReason").value = "";
+  document.getElementById("escalateModal").classList.remove("hidden");
+}
+
+async function submitEscalation() {
+  const id = document.getElementById("escalateGrievanceId").value;
+  const reason = document.getElementById("escalateReason").value.trim();
+
+  if (!reason) {
+    showToast("Please provide an escalation reason", true);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/grievances/${id}/escalate`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Failed to escalate", true);
+      return;
+    }
+
+    showToast("Complaint escalated to Urgent!");
+    closeModal("escalateModal");
+    loadStudentData();
+  } catch (err) {
+    showToast("Failed to escalate", true);
+  }
+}
+
+function openMeetingModal(id, status, venue, feedback) {
+  document.getElementById("modalMeetingId").value = id;
+  if (status) document.getElementById("modalMeetingStatus").value = status;
+  document.getElementById("modalMeetingVenue").value = venue || "";
+  document.getElementById("modalMeetingFeedback").value = feedback || "";
+  document.getElementById("meetingModal").classList.remove("hidden");
+}
+
+async function submitMeetingUpdate() {
+  const id = document.getElementById("modalMeetingId").value;
+  const status = document.getElementById("modalMeetingStatus").value;
+  const venueOrLink = document.getElementById("modalMeetingVenue").value.trim();
+  const feedback = document.getElementById("modalMeetingFeedback").value.trim();
+
+  try {
+    const res = await fetch(`${API_BASE}/meetings/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, venueOrLink, feedback })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.error || "Failed to update meeting", true);
+      return;
+    }
+
+    showToast("Meeting updated successfully!");
+    closeModal("meetingModal");
+    loadMentorData();
+  } catch (err) {
+    showToast("Failed to update meeting", true);
+  }
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).classList.add("hidden");
+}
+
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function showError(elemId, message) {
+  const elem = document.getElementById(elemId);
+  if (elem) {
+    elem.textContent = message;
+    elem.classList.remove("hidden");
+  }
+}
+
+function clearErrors() {
+  document.querySelectorAll("p[id$='Err']").forEach(p => {
+    p.textContent = "";
+    p.classList.add("hidden");
+  });
+}
+
+const toast = {
+  container: null,
+
+  getContainer() {
+    if (!this.container) {
+      this.container = document.getElementById("hot-toast-container");
+      if (!this.container) {
+        this.container = document.createElement("div");
+        this.container.id = "hot-toast-container";
+        this.container.className = "fixed top-5 inset-x-0 z-50 flex flex-col items-center gap-2 pointer-events-none px-4";
+        document.body.appendChild(this.container);
+      }
+    }
+    return this.container;
+  },
+
+  show(message, type = "default", duration = 3500) {
+    const container = this.getContainer();
+    const id = "toast-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4);
+
+    const toastEl = document.createElement("div");
+    toastEl.id = id;
+    toastEl.className = "hot-toast pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-full bg-white/95 backdrop-blur-md border border-black/10 shadow-[0_10px_30px_rgba(0,0,0,0.12),0_4px_10px_rgba(0,0,0,0.06)] text-xs font-semibold text-titanium-900 max-w-md cursor-pointer transition-transform hover:scale-[1.02]";
+
+    let iconHtml = "";
+    if (type === "success") {
+      iconHtml = `
+        <div class="w-5 h-5 rounded-full bg-[#00F5B8] flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(0,245,184,0.4)]">
+          <svg class="w-3 h-3 text-black stroke-[3.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+          </svg>
+        </div>
+      `;
+    } else if (type === "error") {
+      iconHtml = `
+        <div class="w-5 h-5 rounded-full bg-[#EF4444] flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(239,68,68,0.4)]">
+          <svg class="w-3 h-3 text-white stroke-[3.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+      `;
+    } else if (type === "loading") {
+      iconHtml = `
+        <div class="w-5 h-5 flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-titanium-800 toast-spinner" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      `;
+    } else {
+      iconHtml = `
+        <div class="w-5 h-5 rounded-full bg-titanium-900 flex items-center justify-center shrink-0 text-white font-bold text-[10px]">
+          i
+        </div>
+      `;
+    }
+
+    toastEl.innerHTML = `
+      ${iconHtml}
+      <span class="tracking-wide">${escapeHtml(message)}</span>
+    `;
+
+    
+    toastEl.onclick = () => this.dismiss(id);
+
+    container.appendChild(toastEl);
+
+    
+    if (duration > 0) {
+      setTimeout(() => {
+        this.dismiss(id);
+      }, duration);
+    }
+
+    return id;
+  },
+
+  success(message, duration = 3500) {
+    return this.show(message, "success", duration);
+  },
+
+  error(message, duration = 4000) {
+    return this.show(message, "error", duration);
+  },
+
+  loading(message) {
+    return this.show(message, "loading", 0);
+  },
+
+  dismiss(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add("toast-closing");
+    setTimeout(() => {
+      if (el && el.parentNode) {
+        el.parentNode.removeChild(el);
+      }
+    }, 250);
+  }
+};
+
+window.toast = toast;
+
+function showToast(message, isError = false) {
+  if (isError) {
+    toast.error(message);
+  } else {
+    toast.success(message);
+  }
+}
+
+function renderStatusBadge(status, isEscalated) {
+  if (isEscalated) {
+    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-red-600 text-white border-0 shadow-sm">Escalated</span>`;
+  }
+  const s = (status || "").toLowerCase();
+  if (s === "resolved") {
+    return `<span class="pill-mint px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider shadow-sm">Resolved</span>`;
+  }
+  if (s === "in progress") {
+    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 border-amber-200">In Progress</span>`;
+  }
+  if (s === "under review") {
+    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800 border-sky-200">Under Review</span>`;
+  }
+  return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-titanium-600">Submitted</span>`;
+}
+
+function renderPriorityBadge(priority) {
+  const p = (priority || "").toLowerCase();
+  if (p === "urgent") {
+    return `<span class="pill-btn px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-red-100 text-red-700 border-red-200">Urgent</span>`;
+  }
+  if (p === "high") {
+    return `<span class="pill-btn px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 border-amber-200">High</span>`;
+  }
+  return `<span class="pill-btn px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-titanium-600">${priority || "Medium"}</span>`;
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
