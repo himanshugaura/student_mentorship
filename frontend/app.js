@@ -393,21 +393,21 @@ function renderStudentGrievances(grievances) {
   }
 
   container.innerHTML = grievances.map(g => `
-    <div class="glass-panel rounded-2xl p-5 space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(g.title)}</h4>
-        <div class="flex items-center gap-2">
+    <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-3 min-w-0 max-w-full overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 min-w-0">
+        <h4 class="text-sm font-extrabold text-titanium-900 break-words min-w-0 flex-1">${escapeHtml(g.title)}</h4>
+        <div class="flex items-center gap-1.5 flex-wrap flex-shrink-0">
           ${renderPriorityBadge(g.priority)}
           ${renderStatusBadge(g.status, g.isEscalated)}
         </div>
       </div>
-      <p class="text-xs text-titanium-700 leading-relaxed">${escapeHtml(g.description)}</p>
+      <p class="text-xs text-titanium-700 leading-relaxed break-words whitespace-pre-wrap min-w-0">${escapeHtml(g.description)}</p>
       
-      <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-titanium-600 pt-2 border-t border-black/5">
-        <div>Category: <span class="text-titanium-900 font-bold">${escapeHtml(g.category || "General")}</span> • Submitted: ${g.createdAt || ""}</div>
-        <div>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-titanium-600 pt-2 border-t border-black/5 min-w-0">
+        <div class="break-words min-w-0">Category: <span class="text-titanium-900 font-bold">${escapeHtml(g.category || "General")}</span> • Submitted: ${g.createdAt || ""}</div>
+        <div class="flex-shrink-0">
           ${!g.isEscalated && g.status !== 'Resolved' ? `
-            <button onclick="openEscalateModal(${g.id})" class="pill-btn px-3 py-1 text-xs text-red-600 border border-red-200 hover:bg-red-50">
+            <button onclick="openEscalateModal(${g.id})" class="pill-btn px-3 py-1 text-xs text-red-600 border border-red-200 hover:bg-red-50 w-full sm:w-auto text-center">
               Escalate Complaint
             </button>
           ` : ""}
@@ -415,11 +415,11 @@ function renderStudentGrievances(grievances) {
       </div>
 
       ${g.remarks ? `
-        <div class="mt-2.5 p-3 rounded-2xl bg-white/60 border border-white/80 text-xs shadow-sm">
+        <div class="mt-2.5 p-3 rounded-2xl bg-white/60 border border-white/80 text-xs shadow-sm min-w-0 overflow-hidden">
           <span class="text-titanium-900 font-extrabold uppercase tracking-wider block text-[10px] flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-mint"></span> Faculty Resolution Notes:
+            <span class="w-2 h-2 rounded-full bg-mint flex-shrink-0"></span> Faculty Resolution Notes:
           </span>
-          <p class="text-titanium-800 mt-1">${escapeHtml(g.remarks)}</p>
+          <p class="text-titanium-800 mt-1 break-words whitespace-pre-wrap min-w-0">${escapeHtml(g.remarks)}</p>
         </div>
       ` : ""}
     </div>
@@ -434,20 +434,20 @@ function renderStudentMeetings(meetings) {
   }
 
   container.innerHTML = meetings.map(m => `
-    <div class="glass-panel rounded-2xl p-5 space-y-3">
-      <div class="flex justify-between items-center">
-        <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(m.title)}</h4>
-        <span class="pill-btn px-3 py-0.5 text-xs font-bold text-titanium-800">${escapeHtml(m.status)}</span>
+    <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-3 min-w-0 max-w-full overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 min-w-0">
+        <h4 class="text-sm font-extrabold text-titanium-900 break-words min-w-0 flex-1">${escapeHtml(m.title)}</h4>
+        <span class="pill-btn px-3 py-0.5 text-xs font-bold text-titanium-800 self-start sm:self-auto flex-shrink-0">${escapeHtml(m.status)}</span>
       </div>
-      <p class="text-xs text-titanium-700 leading-relaxed">${escapeHtml(m.purpose || "Guidance session")}</p>
-      <div class="text-xs text-titanium-600">
+      <p class="text-xs text-titanium-700 leading-relaxed break-words whitespace-pre-wrap min-w-0">${escapeHtml(m.purpose || "Guidance session")}</p>
+      <div class="text-xs text-titanium-600 break-words min-w-0">
         Mentor: <span class="text-titanium-900 font-bold">${escapeHtml(m.mentorName || "Faculty Mentor")}</span> • Date/Time: <span class="text-titanium-900 font-medium">${m.meetingTime || "TBD"}</span>
       </div>
       ${m.venueOrLink ? `
-        <div class="text-xs text-titanium-900 font-semibold">Venue / Link: <span class="underline text-emerald-700">${escapeHtml(m.venueOrLink)}</span></div>
+        <div class="text-xs text-titanium-900 font-semibold break-words min-w-0">Venue / Link: <span class="underline text-emerald-700 break-words">${escapeHtml(m.venueOrLink)}</span></div>
       ` : ""}
       ${m.feedback ? `
-        <div class="text-xs text-titanium-700 border-t border-black/5 pt-2">Notes/Feedback: ${escapeHtml(m.feedback)}</div>
+        <div class="text-xs text-titanium-700 border-t border-black/5 pt-2 break-words whitespace-pre-wrap min-w-0">Notes/Feedback: ${escapeHtml(m.feedback)}</div>
       ` : ""}
     </div>
   `).join("");
@@ -559,13 +559,13 @@ async function loadMentorData() {
       container.innerHTML = `<div class="text-xs text-titanium-600 py-4 col-span-3">No students allocated to you yet.</div>`;
     } else {
       container.innerHTML = students.map(s => `
-        <div class="glass-panel rounded-2xl p-5 space-y-2">
-          <div class="flex justify-between items-center">
-            <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(s.name)}</h4>
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-2 min-w-0 max-w-full overflow-hidden">
+          <div class="flex justify-between items-center min-w-0">
+            <h4 class="text-sm font-extrabold text-titanium-900 break-words min-w-0 flex-1">${escapeHtml(s.name)}</h4>
           </div>
-          <div class="text-xs text-titanium-700">Student ID: <span class="font-bold text-titanium-900">${escapeHtml(s.rollNumber || "N/A")}</span></div>
-          <div class="text-xs text-titanium-700">Email: <span class="font-medium text-titanium-900">${escapeHtml(s.email)}</span></div>
-          <div class="text-xs text-titanium-600">Dept: ${escapeHtml(s.department || "BCA")}</div>
+          <div class="text-xs text-titanium-700 break-words min-w-0">Student ID: <span class="font-bold text-titanium-900">${escapeHtml(s.rollNumber || "N/A")}</span></div>
+          <div class="text-xs text-titanium-700 break-words min-w-0">Email: <span class="font-medium text-titanium-900">${escapeHtml(s.email)}</span></div>
+          <div class="text-xs text-titanium-600 break-words min-w-0">Dept: ${escapeHtml(s.department || "BCA")}</div>
         </div>
       `).join("");
     }
@@ -580,13 +580,13 @@ async function loadMentorData() {
       container.innerHTML = `<div class="text-xs text-titanium-600 py-6 text-center">No student complaints assigned to your mentorship.</div>`;
     } else {
       container.innerHTML = grievances.map(g => `
-        <div class="glass-panel rounded-2xl p-5 space-y-3">
-          <div class="flex justify-between items-center">
-            <div>
-              <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(g.title)}</h4>
-              <span class="text-xs text-titanium-600">Student: <span class="text-titanium-900 font-bold">${escapeHtml(g.studentName || "Student")}</span></span>
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-3 min-w-0 max-w-full overflow-hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 min-w-0">
+            <div class="min-w-0 flex-1">
+              <h4 class="text-sm font-extrabold text-titanium-900 break-words">${escapeHtml(g.title)}</h4>
+              <span class="text-xs text-titanium-600 break-words">Student: <span class="text-titanium-900 font-bold">${escapeHtml(g.studentName || "Student")}</span></span>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap flex-shrink-0">
               ${renderPriorityBadge(g.priority)}
               ${renderStatusBadge(g.status, g.isEscalated)}
               <button onclick="openStatusModal(${g.id}, '${g.status}', '${escapeHtml(g.remarks || "")}')" class="pill-mint px-3.5 py-1 text-xs font-bold">
@@ -594,9 +594,9 @@ async function loadMentorData() {
               </button>
             </div>
           </div>
-          <p class="text-xs text-titanium-700 leading-relaxed">${escapeHtml(g.description)}</p>
-          <div class="text-xs text-titanium-600">Category: ${escapeHtml(g.category || "General")} • Submitted: ${g.createdAt || ""}</div>
-          ${g.remarks ? `<div class="p-2.5 rounded-xl bg-white/60 border border-white/80 text-xs text-titanium-800">Remarks: ${escapeHtml(g.remarks)}</div>` : ""}
+          <p class="text-xs text-titanium-700 leading-relaxed break-words whitespace-pre-wrap min-w-0">${escapeHtml(g.description)}</p>
+          <div class="text-xs text-titanium-600 break-words min-w-0">Category: ${escapeHtml(g.category || "General")} • Submitted: ${g.createdAt || ""}</div>
+          ${g.remarks ? `<div class="p-2.5 rounded-xl bg-white/60 border border-white/80 text-xs text-titanium-800 break-words whitespace-pre-wrap min-w-0">Remarks: ${escapeHtml(g.remarks)}</div>` : ""}
         </div>
       `).join("");
     }
@@ -611,19 +611,20 @@ async function loadMentorData() {
       container.innerHTML = `<div class="text-xs text-titanium-600 py-6 text-center">No guidance meeting requests.</div>`;
     } else {
       container.innerHTML = meetings.map(m => `
-        <div class="glass-panel rounded-2xl p-5 space-y-3">
-          <div class="flex justify-between items-center">
-            <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(m.title)}</h4>
-            <div class="flex items-center gap-2">
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-3 min-w-0 max-w-full overflow-hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 min-w-0">
+            <h4 class="text-sm font-extrabold text-titanium-900 break-words min-w-0 flex-1">${escapeHtml(m.title)}</h4>
+            <div class="flex items-center gap-2 flex-wrap flex-shrink-0">
               <span class="pill-btn px-3 py-0.5 text-xs font-bold text-titanium-800">${escapeHtml(m.status)}</span>
               <button onclick="openMeetingModal(${m.id}, '${m.status}', '${escapeHtml(m.venueOrLink || "")}', '${escapeHtml(m.feedback || "")}')" class="pill-mint px-3.5 py-1 text-xs font-bold">
                 Manage
               </button>
             </div>
           </div>
-          <p class="text-xs text-titanium-700 leading-relaxed">Purpose: ${escapeHtml(m.purpose || "N/A")}</p>
-          <div class="text-xs text-titanium-600">Student: <span class="text-titanium-900 font-bold">${escapeHtml(m.studentName || "Student")}</span> • Time: ${m.meetingTime || "Unspecified"}</div>
-          ${m.venueOrLink ? `<div class="text-xs text-titanium-900 font-semibold">Venue/Link: ${escapeHtml(m.venueOrLink)}</div>` : ""}
+          <p class="text-xs text-titanium-700 leading-relaxed break-words whitespace-pre-wrap min-w-0">Purpose: ${escapeHtml(m.purpose || "N/A")}</p>
+          <div class="text-xs text-titanium-600 break-words min-w-0">Student: <span class="text-titanium-900 font-bold">${escapeHtml(m.studentName || "Student")}</span> • Time: ${m.meetingTime || "Unspecified"}</div>
+          ${m.venueOrLink ? `<div class="text-xs text-titanium-900 font-semibold break-words min-w-0">Venue/Link: ${escapeHtml(m.venueOrLink)}</div>` : ""}
+          ${m.feedback ? `<div class="p-2.5 rounded-xl bg-white/60 border border-white/80 text-xs text-titanium-800 break-words whitespace-pre-wrap min-w-0">Feedback: ${escapeHtml(m.feedback)}</div>` : ""}
         </div>
       `).join("");
     }
@@ -741,10 +742,13 @@ async function loadAdminData() {
       container.innerHTML = `<div class="text-xs text-titanium-600 py-6 text-center">No grievances in system.</div>`;
     } else {
       container.innerHTML = grievances.map(g => `
-        <div class="glass-panel rounded-2xl p-5 space-y-3">
-          <div class="flex justify-between items-center">
-            <h4 class="text-sm font-extrabold text-titanium-900">${escapeHtml(g.title)}</h4>
-            <div class="flex items-center gap-2">
+        <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-3 min-w-0 max-w-full overflow-hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 min-w-0">
+            <div class="min-w-0 flex-1">
+              <h4 class="text-sm font-extrabold text-titanium-900 break-words">${escapeHtml(g.title)}</h4>
+              <span class="text-xs text-titanium-600 break-words">Student: <span class="text-titanium-900 font-bold">${escapeHtml(g.studentName || "")}</span></span>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap flex-shrink-0">
               ${renderPriorityBadge(g.priority)}
               ${renderStatusBadge(g.status, g.isEscalated)}
               <button onclick="openStatusModal(${g.id}, '${g.status}', '${escapeHtml(g.remarks || "")}')" class="pill-mint px-3.5 py-1 text-xs font-bold">
@@ -752,11 +756,11 @@ async function loadAdminData() {
               </button>
             </div>
           </div>
-          <p class="text-xs text-titanium-700 leading-relaxed">${escapeHtml(g.description)}</p>
-          <div class="text-xs text-titanium-600">
+          <p class="text-xs text-titanium-700 leading-relaxed break-words whitespace-pre-wrap min-w-0">${escapeHtml(g.description)}</p>
+          <div class="text-xs text-titanium-600 break-words min-w-0">
             Student: <span class="text-titanium-900 font-bold">${escapeHtml(g.studentName || "")}</span> • Category: ${escapeHtml(g.category || "General")} • Date: ${g.createdAt || ""}
           </div>
-          ${g.remarks ? `<div class="p-2.5 rounded-xl bg-white/60 border border-white/80 text-xs text-titanium-800">Remarks: ${escapeHtml(g.remarks)}</div>` : ""}
+          ${g.remarks ? `<div class="p-2.5 rounded-xl bg-white/60 border border-white/80 text-xs text-titanium-800 break-words whitespace-pre-wrap min-w-0">Remarks: ${escapeHtml(g.remarks)}</div>` : ""}
         </div>
       `).join("");
     }

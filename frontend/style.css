@@ -14,6 +14,16 @@
   --color-text-muted: #718096;
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 body {
   background-color: #CFD4DE;
   background-image: radial-gradient(ellipse at 50% -10%, #F8F9FB 0%, #E0E4EB 40%, #B8BEC9 100%);
@@ -29,7 +39,23 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   letter-spacing: 0.03em;
 }
 
+.break-words,
+.glass-panel,
+.glass-panel p,
+.glass-panel h1,
+.glass-panel h2,
+.glass-panel h3,
+.glass-panel h4,
+.glass-panel span,
+.glass-panel div,
+.glass-input {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .glass-panel {
+  min-width: 0;
+  max-width: 100%;
   background: rgba(255, 255, 255, 0.45);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -63,6 +89,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 }
 
 .pill-btn:hover {
@@ -81,6 +108,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 }
 
 .pill-mint:hover {
@@ -99,6 +127,7 @@ h1, h2, h3, h4, h5, h6, .font-heading {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
 }
 
 .pill-black:hover {
