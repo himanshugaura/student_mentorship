@@ -1,5 +1,6 @@
 import com.sun.net.httpserver.HttpServer;
 import server.Database;
+import server.JsonUtil;
 import api.AuthApi;
 import api.GrievanceApi;
 import api.MentorshipApi;
@@ -23,7 +24,6 @@ public class Main {
         int port = getPort();
         System.out.println("=================================================");
         System.out.println("  Student Mentorship & Grievance Management System");
-        System.out.println("  Pure Simple Java Backend (NO Spring Boot)");
         System.out.println("  Server Port: " + port);
         System.out.println("=================================================");
 
@@ -38,6 +38,11 @@ public class Main {
         GrievanceApi grievanceHandler = new GrievanceApi();
         MentorshipApi mentorshipHandler = new MentorshipApi();
         AdminApi adminHandler = new AdminApi();
+
+        server.createContext("/health", exchange -> {
+            if (JsonUtil.handleCorsPreflight(exchange)) return;
+            JsonUtil.sendJson(exchange, 200, "{\"status\":true}");
+        });
 
         
         server.createContext("/api/register", authHandler);
