@@ -1,0 +1,24 @@
+# Compiled Java Class Files (Never push bytecode to Git)
+*.class
+**/*.class
+
+# Environment & Sensitive Credentials
+.env
+*.env
+backend/.env
+
+# Build & Log Files
+*.log
+logs/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Configurations
+.idea/
+*.iml
+.vscode/
+*.swp
+*~
