@@ -1,0 +1,10 @@
+.git
+.gitignore
+*.class
+**/*.class
+*.bat
+*.log
+.env
+*.env
+.DS_Store
+Thumbs.db
