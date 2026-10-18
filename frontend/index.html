@@ -276,7 +276,10 @@
           <div class="glass-panel rounded-3xl p-4 sm:p-7 space-y-4 min-w-0 max-w-full">
             <h2 class="text-sm font-extrabold text-titanium-900 uppercase tracking-wider border-b border-black/5 pb-3">My Submitted Grievances</h2>
             <div id="studentGrievancesList" class="space-y-3 min-w-0 max-w-full">
-              <div class="text-xs text-titanium-600 text-center py-6">Loading grievances...</div>
+              <div class="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+                <span class="text-xs font-bold text-titanium-600 tracking-wide uppercase">Loading grievances...</span>
+              </div>
             </div>
           </div>
         </div>
@@ -311,7 +314,10 @@
           <div class="glass-panel rounded-3xl p-4 sm:p-7 space-y-4 min-w-0 max-w-full">
             <h2 class="text-sm font-extrabold text-titanium-900 uppercase tracking-wider border-b border-black/5 pb-3">My Guidance Sessions</h2>
             <div id="studentMeetingsList" class="space-y-3 min-w-0 max-w-full">
-              <div class="text-xs text-titanium-600 text-center py-6">Loading sessions...</div>
+              <div class="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+                <span class="text-xs font-bold text-titanium-600 tracking-wide uppercase">Loading guidance sessions...</span>
+              </div>
             </div>
           </div>
         </div>
@@ -323,7 +329,10 @@
           <div class="glass-panel rounded-3xl p-4 sm:p-7 space-y-4 min-w-0 max-w-full">
             <h2 class="text-sm font-extrabold text-titanium-900 uppercase tracking-wider border-b border-black/5 pb-3">My Assigned Students</h2>
             <div id="mentorStudentsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0 max-w-full">
-              
+              <div class="col-span-full flex flex-col items-center justify-center py-8 text-center space-y-3">
+                <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+                <span class="text-xs font-bold text-titanium-600 tracking-wide uppercase">Loading assigned students...</span>
+              </div>
             </div>
           </div>
         </div>
@@ -332,7 +341,10 @@
           <div class="glass-panel rounded-3xl p-4 sm:p-7 space-y-4 min-w-0 max-w-full">
             <h2 class="text-sm font-extrabold text-titanium-900 uppercase tracking-wider border-b border-black/5 pb-3">Grievances Assigned to My Mentorship</h2>
             <div id="mentorGrievancesList" class="space-y-3 min-w-0 max-w-full">
-              
+              <div class="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+                <span class="text-xs font-bold text-titanium-600 tracking-wide uppercase">Loading student grievances...</span>
+              </div>
             </div>
           </div>
         </div>
@@ -341,7 +353,10 @@
           <div class="glass-panel rounded-3xl p-4 sm:p-7 space-y-4 min-w-0 max-w-full">
             <h2 class="text-sm font-extrabold text-titanium-900 uppercase tracking-wider border-b border-black/5 pb-3">Student Guidance Meeting Requests</h2>
             <div id="mentorMeetingsList" class="space-y-3 min-w-0 max-w-full">
-              
+              <div class="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+                <span class="text-xs font-bold text-titanium-600 tracking-wide uppercase">Loading meeting requests...</span>
+              </div>
             </div>
           </div>
         </div>
@@ -411,20 +426,27 @@
               </div>
               <span id="adminStudentsAllocationCount" class="pill-btn px-3 py-1 text-xs font-bold text-titanium-700">Loading...</span>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs border-collapse">
+            <div class="overflow-x-auto -mx-1 sm:mx-0">
+              <table class="w-full min-w-[640px] text-left text-xs border-collapse">
                 <thead>
                   <tr class="border-b border-black/10 text-titanium-600 uppercase tracking-wider font-bold">
-                    <th class="py-3 px-3">Student Name</th>
-                    <th class="py-3 px-3">Student ID</th>
-                    <th class="py-3 px-3">Email</th>
-                    <th class="py-3 px-3">Department</th>
-                    <th class="py-3 px-3">Assigned Mentor</th>
-                    <th class="py-3 px-3 text-right">Action</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Student Name</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Student ID</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Email</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Department</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Assigned Mentor</th>
+                    <th class="py-3 px-3.5 text-right whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody id="adminStudentMentorsTableBody">
-                  
+                  <tr>
+                    <td colspan="6" class="py-10 text-center">
+                      <div class="flex flex-col items-center justify-center space-y-3">
+                        <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+                        <span class="text-xs font-bold text-titanium-600 tracking-wide uppercase">Loading student & mentor directory...</span>
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -434,7 +456,10 @@
           <div class="glass-panel rounded-3xl p-4 sm:p-7 space-y-4 min-w-0 max-w-full">
             <h2 class="text-sm font-extrabold text-titanium-900 uppercase tracking-wider border-b border-black/5 pb-3">All Grievances Across College</h2>
             <div id="adminGrievancesList" class="space-y-3 min-w-0 max-w-full">
-              
+              <div class="flex flex-col items-center justify-center py-8 text-center space-y-3">
+                <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+                <span class="text-xs font-bold text-titanium-600 tracking-wide uppercase">Loading campus grievances...</span>
+              </div>
             </div>
           </div>
         </div>
@@ -449,20 +474,27 @@
                 <button onclick="loadAdminUsers('MENTOR')" class="pill-btn px-3 py-1 text-xs">Mentors</button>
               </div>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs border-collapse">
+            <div class="overflow-x-auto -mx-1 sm:mx-0">
+              <table class="w-full min-w-[640px] text-left text-xs border-collapse">
                 <thead>
                   <tr class="border-b border-black/10 text-titanium-600 uppercase tracking-wider font-bold">
-                    <th class="py-3 px-3">Name</th>
-                    <th class="py-3 px-3">Email</th>
-                    <th class="py-3 px-3">Role</th>
-                    <th class="py-3 px-3">Department</th>
-                    <th class="py-3 px-3">Assigned Mentor</th>
-                    <th class="py-3 px-3 text-right">Action</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Name</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Email</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Role</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Department</th>
+                    <th class="py-3 px-3.5 whitespace-nowrap">Assigned Mentor</th>
+                    <th class="py-3 px-3.5 text-right whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody id="adminUsersTableBody">
-                  
+                  <tr>
+                    <td colspan="6" class="py-10 text-center">
+                      <div class="flex flex-col items-center justify-center space-y-3">
+                        <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+                        <span class="text-xs font-bold text-titanium-600 tracking-wide uppercase">Loading registered users...</span>
+                      </div>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>

@@ -40,17 +40,19 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 }
 
 .break-words,
-.glass-panel,
-.glass-panel p,
-.glass-panel h1,
-.glass-panel h2,
-.glass-panel h3,
-.glass-panel h4,
-.glass-panel span,
-.glass-panel div,
+.glass-panel p.break-words,
 .glass-input {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   word-break: break-word;
+}
+
+table {
+  min-width: 640px;
+}
+
+table th,
+table td {
+  white-space: nowrap;
 }
 
 .glass-panel {

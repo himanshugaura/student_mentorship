@@ -116,6 +116,28 @@ function setButtonLoading(btn, isLoading, loadingText = "Processing...") {
   }
 }
 
+function renderLoadingState(text = "Loading data from server...") {
+  return `
+    <div class="flex flex-col items-center justify-center py-8 px-4 text-center space-y-3">
+      <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+      <p class="text-xs font-bold text-titanium-600 tracking-wide uppercase">${escapeHtml(text)}</p>
+    </div>
+  `;
+}
+
+function renderTableLoadingState(colSpan = 6, text = "Loading records from server...") {
+  return `
+    <tr>
+      <td colspan="${colSpan}" class="py-10 text-center">
+        <div class="flex flex-col items-center justify-center space-y-3">
+          <div class="w-7 h-7 rounded-full border-2 border-titanium-300 border-t-mint animate-spin"></div>
+          <span class="text-xs font-bold text-titanium-600 tracking-wide uppercase">${escapeHtml(text)}</span>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
 async function handleLoginSubmit(event) {
   event.preventDefault();
   clearErrors();
@@ -358,7 +380,6 @@ function switchTab(tabId, clickedBtn = null) {
 }
 
 async function loadStudentData() {
-  
   const mentorDisplay = document.getElementById("studentMentorDisplay");
   if (currentUser.mentorName) {
     mentorDisplay.textContent = currentUser.mentorName;
@@ -366,22 +387,26 @@ async function loadStudentData() {
     mentorDisplay.textContent = "Not yet allocated. An administrator will assign your mentor shortly.";
   }
 
-  
+  const gList = document.getElementById("studentGrievancesList");
+  if (gList) gList.innerHTML = renderLoadingState("Fetching your grievances...");
+
+  const mList = document.getElementById("studentMeetingsList");
+  if (mList) mList.innerHTML = renderLoadingState("Fetching guidance sessions...");
+
   try {
     const res = await fetch(`${API_BASE}/grievances/student/${currentUser.id}`);
     const list = await res.json();
     renderStudentGrievances(list);
   } catch (err) {
-    document.getElementById("studentGrievancesList").innerHTML = `<div class="text-xs text-red-600 py-4">Failed to load grievances from backend.</div>`;
+    if (gList) gList.innerHTML = `<div class="text-xs text-red-600 py-4 text-center">Failed to load grievances from backend.</div>`;
   }
 
-  
   try {
     const res = await fetch(`${API_BASE}/meetings/student/${currentUser.id}`);
     const meetings = await res.json();
     renderStudentMeetings(meetings);
   } catch (err) {
-    document.getElementById("studentMeetingsList").innerHTML = `<div class="text-xs text-red-600 py-4">Failed to load meetings.</div>`;
+    if (mList) mList.innerHTML = `<div class="text-xs text-red-600 py-4 text-center">Failed to load meetings.</div>`;
   }
 }
 
@@ -550,13 +575,21 @@ async function handleMeetingRequestSubmit(event) {
 }
 
 async function loadMentorData() {
-  
+  const sContainer = document.getElementById("mentorStudentsList");
+  if (sContainer) sContainer.innerHTML = `<div class="col-span-full">${renderLoadingState("Fetching assigned students...")}</div>`;
+
+  const gContainer = document.getElementById("mentorGrievancesList");
+  if (gContainer) gContainer.innerHTML = renderLoadingState("Fetching student grievances...");
+
+  const mContainer = document.getElementById("mentorMeetingsList");
+  if (mContainer) mContainer.innerHTML = renderLoadingState("Fetching guidance meeting requests...");
+
   try {
     const res = await fetch(`${API_BASE}/mentors/${currentUser.id}/students`);
     const students = await res.json();
     const container = document.getElementById("mentorStudentsList");
     if (!students || students.length === 0) {
-      container.innerHTML = `<div class="text-xs text-titanium-600 py-4 col-span-3">No students allocated to you yet.</div>`;
+      container.innerHTML = `<div class="text-xs text-titanium-600 py-4 col-span-3 text-center">No students allocated to you yet.</div>`;
     } else {
       container.innerHTML = students.map(s => `
         <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-2 min-w-0 max-w-full overflow-hidden">
@@ -632,7 +665,15 @@ async function loadMentorData() {
 }
 
 async function loadAdminData() {
-  
+  const countBadge = document.getElementById("adminStudentsAllocationCount");
+  if (countBadge) countBadge.textContent = "Loading...";
+
+  const tableBody = document.getElementById("adminStudentMentorsTableBody");
+  if (tableBody) tableBody.innerHTML = renderTableLoadingState(6, "Loading student allocation directory...");
+
+  const gContainer = document.getElementById("adminGrievancesList");
+  if (gContainer) gContainer.innerHTML = renderLoadingState("Fetching all campus grievances...");
+
   try {
     const res = await fetch(`${API_BASE}/admin/stats`);
     const stats = await res.json();
@@ -676,8 +717,6 @@ async function loadAdminData() {
       mentors.map(m => `<option value="${m.id}">${escapeHtml(m.name)} (${escapeHtml(m.department || 'Faculty')})</option>`).join("");
 
     
-    const tableBody = document.getElementById("adminStudentMentorsTableBody");
-    const countBadge = document.getElementById("adminStudentsAllocationCount");
     if (countBadge) {
       countBadge.textContent = `${assignedStudents.length} Assigned • ${unassignedStudents.length} Unassigned`;
     }
@@ -690,38 +729,38 @@ async function loadAdminData() {
           const isAssigned = Boolean(s.mentorId || (s.mentorName && s.mentorName.trim() !== ""));
           return `
             <tr class="border-b border-black/5 hover:bg-white/40 transition">
-              <td class="py-3 px-3 text-titanium-900 font-extrabold text-xs">
+              <td class="py-3 px-3.5 text-titanium-900 font-extrabold text-xs whitespace-nowrap">
                 ${escapeHtml(s.name)}
               </td>
-              <td class="py-3 px-3 text-titanium-700 font-mono text-xs">
+              <td class="py-3 px-3.5 text-titanium-700 font-mono text-xs whitespace-nowrap">
                 ${escapeHtml(s.rollNumber || "-")}
               </td>
-              <td class="py-3 px-3 text-titanium-600 text-xs">
+              <td class="py-3 px-3.5 text-titanium-600 text-xs whitespace-nowrap">
                 ${escapeHtml(s.email)}
               </td>
-              <td class="py-3 px-3 text-titanium-600 text-xs">
+              <td class="py-3 px-3.5 text-titanium-600 text-xs whitespace-nowrap">
                 ${escapeHtml(s.department || "-")}
               </td>
-              <td class="py-3 px-3">
+              <td class="py-3 px-3.5 whitespace-nowrap">
                 ${isAssigned ? `
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-mint/20 text-titanium-900 border border-mint/40">
-                    <span class="w-1.5 h-1.5 rounded-full bg-mint"></span>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-mint/20 text-titanium-900 border border-mint/40 whitespace-nowrap">
+                    <span class="w-1.5 h-1.5 rounded-full bg-mint flex-shrink-0"></span>
                     ${escapeHtml(s.mentorName || "Assigned")}
                   </span>
                 ` : `
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20 whitespace-nowrap">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>
                     Unassigned
                   </span>
                 `}
               </td>
-              <td class="py-3 px-3 text-right">
+              <td class="py-3 px-3.5 text-right whitespace-nowrap">
                 ${isAssigned ? `
-                  <button onclick="unassignMentor(${s.id}, this)" class="pill-btn px-2.5 py-1 text-[11px] text-amber-700 border border-amber-200 hover:bg-amber-50">
+                  <button onclick="unassignMentor(${s.id}, this)" class="pill-btn px-2.5 py-1 text-[11px] text-amber-700 border border-amber-200 hover:bg-amber-50 whitespace-nowrap">
                     Unassign
                   </button>
                 ` : `
-                  <button onclick="focusAllocation(${s.id})" class="pill-mint px-2.5 py-1 text-[11px] font-bold">
+                  <button onclick="focusAllocation(${s.id})" class="pill-mint px-2.5 py-1 text-[11px] font-bold whitespace-nowrap">
                     Assign
                   </button>
                 `}
@@ -850,11 +889,13 @@ function focusAllocation(studentId) {
 }
 
 async function loadAdminUsers(roleFilter) {
+  const tbody = document.getElementById("adminUsersTableBody");
+  if (tbody) tbody.innerHTML = renderTableLoadingState(6, "Loading user accounts...");
+
   try {
     const url = roleFilter ? `${API_BASE}/users?role=${roleFilter}` : `${API_BASE}/users`;
     const res = await fetch(url);
     const users = await res.json();
-    const tbody = document.getElementById("adminUsersTableBody");
 
     if (!users || users.length === 0) {
       tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-titanium-600">No users found</td></tr>`;
@@ -863,21 +904,21 @@ async function loadAdminUsers(roleFilter) {
 
     tbody.innerHTML = users.map(u => `
       <tr class="border-b border-black/5 hover:bg-white/40">
-        <td class="py-3 px-3 text-titanium-900 font-extrabold">${escapeHtml(u.name)}</td>
-        <td class="py-3 px-3 text-titanium-700 font-medium">${escapeHtml(u.email)}</td>
-        <td class="py-3 px-3">
-          <span class="pill-btn px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-titanium-900">${u.role}</span>
+        <td class="py-3 px-3.5 text-titanium-900 font-extrabold whitespace-nowrap">${escapeHtml(u.name)}</td>
+        <td class="py-3 px-3.5 text-titanium-700 font-medium whitespace-nowrap">${escapeHtml(u.email)}</td>
+        <td class="py-3 px-3.5 whitespace-nowrap">
+          <span class="pill-btn px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-titanium-900 whitespace-nowrap">${u.role}</span>
         </td>
-        <td class="py-3 px-3 text-titanium-600">${escapeHtml(u.department || "-")}</td>
-        <td class="py-3 px-3">
-          ${u.role === 'STUDENT' ? (u.mentorName ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-mint/20 text-titanium-900 border border-mint/40"><span class="w-1.5 h-1.5 rounded-full bg-mint"></span>${escapeHtml(u.mentorName)}</span>` : `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Unassigned</span>`) : '-'}
+        <td class="py-3 px-3.5 text-titanium-600 whitespace-nowrap">${escapeHtml(u.department || "-")}</td>
+        <td class="py-3 px-3.5 whitespace-nowrap">
+          ${u.role === 'STUDENT' ? (u.mentorName ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-mint/20 text-titanium-900 border border-mint/40 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-mint flex-shrink-0"></span>${escapeHtml(u.mentorName)}</span>` : `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/20 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0"></span>Unassigned</span>`) : '-'}
         </td>
-        <td class="py-3 px-3 text-right">
+        <td class="py-3 px-3.5 text-right whitespace-nowrap">
           ${u.id !== currentUser.id ? `
-            <button onclick="deleteUser(${u.id}, this)" class="pill-btn px-2.5 py-1 text-[11px] text-red-600 border border-red-200 hover:bg-red-50">
+            <button onclick="deleteUser(${u.id}, this)" class="pill-btn px-2.5 py-1 text-[11px] text-red-600 border border-red-200 hover:bg-red-50 whitespace-nowrap">
               Delete
             </button>
-          ` : `<span class="text-titanium-400 text-[10px] font-bold uppercase">Active</span>`}
+          ` : `<span class="text-titanium-400 text-[10px] font-bold uppercase whitespace-nowrap">Active</span>`}
         </td>
       </tr>
     `).join("");
