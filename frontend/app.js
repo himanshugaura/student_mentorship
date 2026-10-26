@@ -944,7 +944,12 @@ async function deleteUser(id, btnTrigger = null) {
 
 function openStatusModal(id, currentStatus, currentRemarks) {
   document.getElementById("modalGrievanceId").value = id;
-  if (currentStatus) document.getElementById("modalStatusSelect").value = currentStatus;
+  const statusSelect = document.getElementById("modalStatusSelect");
+  if (currentStatus === "Rejected") {
+    statusSelect.value = "Rejected";
+  } else {
+    statusSelect.value = "Resolved";
+  }
   document.getElementById("modalRemarks").value = currentRemarks || "";
   document.getElementById("statusModal").classList.remove("hidden");
 }
@@ -1181,22 +1186,14 @@ function renderMeetingStatusBadge(status) {
   return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-700 border-orange-200">${escapeHtml(status || "Requested")}</span>`;
 }
 
-function renderStatusBadge(status, isAdmin) {
+function renderStatusBadge(status) {
   const s = (status || "").toLowerCase();
   if (s === "resolved") {
     return `<span class="pill-mint px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider shadow-sm">Resolved</span>`;
   }
-  if (s === "in progress") {
-    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 border-amber-200">In Progress</span>`;
-  }
-  if (s === "under review") {
-    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800 border-sky-200">Under Review</span>`;
-  }
   if (s === "rejected") {
     return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-red-100 text-red-700 border-red-200">Rejected</span>`;
   }
-  // "Submitted" / default — hide on admin side, show orange on student side
-  if (isAdmin) return "";
   return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-700 border-orange-200">Pending</span>`;
 }
 

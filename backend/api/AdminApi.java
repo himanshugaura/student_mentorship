@@ -50,7 +50,7 @@ public class AdminApi implements HttpHandler {
             long totalGrievances = rs3.next() ? rs3.getLong(1) : 0;
 
             
-            ResultSet rs4 = stmt.executeQuery("SELECT COUNT(*) FROM grievances WHERE status IN ('Submitted', 'Under Review', 'In Progress')");
+            ResultSet rs4 = stmt.executeQuery("SELECT COUNT(*) FROM grievances WHERE status = 'Pending'");
             long pendingGrievances = rs4.next() ? rs4.getLong(1) : 0;
 
             

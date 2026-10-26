@@ -99,7 +99,7 @@ public class Database {
                     title VARCHAR(200) NOT NULL,
                     description TEXT NOT NULL,
                     category VARCHAR(50),
-                    status VARCHAR(30) DEFAULT 'Submitted',
+                    status VARCHAR(30) DEFAULT 'Pending',
                     student_id INT,
                     student_name VARCHAR(100),
                     mentor_id INT,
@@ -112,6 +112,8 @@ public class Database {
                 stmt.execute("ALTER TABLE grievances DROP COLUMN IF EXISTS priority");
                 stmt.execute("ALTER TABLE grievances DROP COLUMN IF EXISTS is_escalated");
                 stmt.execute("ALTER TABLE grievances DROP COLUMN IF EXISTS escalation_reason");
+                stmt.execute("UPDATE grievances SET status = 'Pending' WHERE status IN ('Submitted', 'Under Review', 'In Progress')");
+                stmt.execute("ALTER TABLE grievances ALTER COLUMN status SET DEFAULT 'Pending'");
             } catch (Exception ignored) {}
 
             

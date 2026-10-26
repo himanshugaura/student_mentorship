@@ -107,7 +107,7 @@ public class GrievanceApi implements HttpHandler {
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement("""
                  INSERT INTO grievances (title, description, category, status, student_id, student_name, mentor_id, created_at)
-                 VALUES (?, ?, ?, 'Submitted', ?, ?, ?, ?) RETURNING id
+                 VALUES (?, ?, ?, 'Pending', ?, ?, ?, ?) RETURNING id
              """)) {
             stmt.setString(1, title);
             stmt.setString(2, desc);
@@ -125,7 +125,7 @@ public class GrievanceApi implements HttpHandler {
                     + "\"id\": " + newId + ","
                     + "\"title\": \"" + JsonUtil.escape(title) + "\","
                     + "\"category\": \"" + JsonUtil.escape(category) + "\","
-                    + "\"status\": \"Submitted\","
+                    + "\"status\": \"Pending\","
                     + "\"createdAt\": \"" + now + "\""
                     + "}";
             JsonUtil.sendJson(exchange, 200, response);
@@ -175,6 +175,11 @@ public class GrievanceApi implements HttpHandler {
         Map<String, String> data = JsonUtil.parseJson(body);
         String status = data.get("status");
         String remarks = data.get("remarks");
+
+        if (status != null && (status.equalsIgnoreCase("Pending") || status.equalsIgnoreCase("Submitted"))) {
+            JsonUtil.sendJson(exchange, 400, "{\"error\": \"Grievance cannot be changed back to Pending status\"}");
+            return;
+        }
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement("UPDATE grievances SET status = COALESCE(?, status), remarks = COALESCE(?, remarks) WHERE id = ?")) {
