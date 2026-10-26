@@ -57,17 +57,13 @@ public class AdminApi implements HttpHandler {
             ResultSet rs5 = stmt.executeQuery("SELECT COUNT(*) FROM grievances WHERE status = 'Resolved'");
             long resolvedGrievances = rs5.next() ? rs5.getLong(1) : 0;
 
-            
-            ResultSet rs6 = stmt.executeQuery("SELECT COUNT(*) FROM grievances WHERE is_escalated = TRUE");
-            long escalatedGrievances = rs6.next() ? rs6.getLong(1) : 0;
 
             String json = "{"
                     + "\"totalStudents\": " + totalStudents + ","
                     + "\"totalMentors\": " + totalMentors + ","
                     + "\"totalGrievances\": " + totalGrievances + ","
                     + "\"pendingGrievances\": " + pendingGrievances + ","
-                    + "\"resolvedGrievances\": " + resolvedGrievances + ","
-                    + "\"escalatedGrievances\": " + escalatedGrievances
+                    + "\"resolvedGrievances\": " + resolvedGrievances
                     + "}";
             JsonUtil.sendJson(exchange, 200, json);
         }

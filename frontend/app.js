@@ -239,6 +239,11 @@ async function handleRegisterSubmit(event) {
     hasError = true;
   }
 
+  if (phone && !/^\d{10}$/.test(phone)) {
+    showError("regPhoneErr", "Phone number must be exactly 10 digits");
+    hasError = true;
+  }
+
   if (role === "STUDENT") {
     if (!rollNumber) {
       showError("regRollErr", "Student ID is required");
@@ -422,21 +427,14 @@ function renderStudentGrievances(grievances) {
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 min-w-0">
         <h4 class="text-sm font-extrabold text-titanium-900 break-words min-w-0 flex-1">${escapeHtml(g.title)}</h4>
         <div class="flex items-center gap-1.5 flex-wrap flex-shrink-0">
-          ${renderPriorityBadge(g.priority)}
-          ${renderStatusBadge(g.status, g.isEscalated)}
+          ${renderStatusBadge(g.status)}
         </div>
       </div>
       <p class="text-xs text-titanium-700 leading-relaxed break-words whitespace-pre-wrap min-w-0">${escapeHtml(g.description)}</p>
       
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-titanium-600 pt-2 border-t border-black/5 min-w-0">
         <div class="break-words min-w-0">Category: <span class="text-titanium-900 font-bold">${escapeHtml(g.category || "General")}</span> • Submitted: ${g.createdAt || ""}</div>
-        <div class="flex-shrink-0">
-          ${!g.isEscalated && g.status !== 'Resolved' ? `
-            <button onclick="openEscalateModal(${g.id})" class="pill-btn px-3 py-1 text-xs text-red-600 border border-red-200 hover:bg-red-50 w-full sm:w-auto text-center">
-              Escalate Complaint
-            </button>
-          ` : ""}
-        </div>
+        <div class="flex-shrink-0"></div>
       </div>
 
       ${g.remarks ? `
@@ -488,8 +486,6 @@ async function handleGrievanceSubmit(event) {
   const title = document.getElementById("gTitle").value.trim();
   const description = document.getElementById("gDesc").value.trim();
   const category = document.getElementById("gCategory").value;
-  const priority = document.getElementById("gPriority").value;
-
   if (!title) {
     showError("gTitleErr", "Title is required");
     return;
@@ -508,7 +504,6 @@ async function handleGrievanceSubmit(event) {
         title,
         description,
         category,
-        priority,
         studentId: currentUser.id,
         studentName: currentUser.name
       })
@@ -620,8 +615,7 @@ async function loadMentorData() {
               <span class="text-xs text-titanium-600 break-words">Student: <span class="text-titanium-900 font-bold">${escapeHtml(g.studentName || "Student")}</span></span>
             </div>
             <div class="flex items-center gap-2 flex-wrap flex-shrink-0">
-              ${renderPriorityBadge(g.priority)}
-              ${renderStatusBadge(g.status, g.isEscalated)}
+              ${renderStatusBadge(g.status)}
               <button onclick="openStatusModal(${g.id}, '${g.status}', '${escapeHtml(g.remarks || "")}')" class="pill-mint px-3.5 py-1 text-xs font-bold">
                 Update
               </button>
@@ -682,7 +676,6 @@ async function loadAdminData() {
     document.getElementById("statTotalGrievances").textContent = stats.totalGrievances || 0;
     document.getElementById("statPendingGrievances").textContent = stats.pendingGrievances || 0;
     document.getElementById("statResolvedGrievances").textContent = stats.resolvedGrievances || 0;
-    document.getElementById("statEscalatedGrievances").textContent = stats.escalatedGrievances || 0;
   } catch (e) {}
 
   
@@ -788,8 +781,7 @@ async function loadAdminData() {
               <span class="text-xs text-titanium-600 break-words">Student: <span class="text-titanium-900 font-bold">${escapeHtml(g.studentName || "")}</span></span>
             </div>
             <div class="flex items-center gap-2 flex-wrap flex-shrink-0">
-              ${renderPriorityBadge(g.priority)}
-              ${renderStatusBadge(g.status, g.isEscalated)}
+              ${renderStatusBadge(g.status)}
               <button onclick="openStatusModal(${g.id}, '${g.status}', '${escapeHtml(g.remarks || "")}')" class="pill-mint px-3.5 py-1 text-xs font-bold">
                 Update
               </button>
@@ -985,24 +977,6 @@ async function submitStatusUpdate(btnTrigger = null) {
     setButtonLoading(btn, false);
   }
 }
-
-function openEscalateModal(id) {
-  document.getElementById("escalateGrievanceId").value = id;
-  document.getElementById("escalateReason").value = "";
-  document.getElementById("escalateModal").classList.remove("hidden");
-}
-
-async function submitEscalation(btnTrigger = null) {
-  const btn = btnTrigger || document.getElementById("modalEscalateSubmitBtn");
-  if (btn && btn.dataset.loading === "true") return;
-
-  const id = document.getElementById("escalateGrievanceId").value;
-  const reason = document.getElementById("escalateReason").value.trim();
-
-  if (!reason) {
-    showToast("Please provide an escalation reason", true);
-    return;
-  }
 
   setButtonLoading(btn, true, "Escalating...");
   try {
@@ -1202,10 +1176,7 @@ function showToast(message, isError = false) {
   }
 }
 
-function renderStatusBadge(status, isEscalated) {
-  if (isEscalated) {
-    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-red-600 text-white border-0 shadow-sm">Escalated</span>`;
-  }
+function renderStatusBadge(status, isAdmin) {
   const s = (status || "").toLowerCase();
   if (s === "resolved") {
     return `<span class="pill-mint px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider shadow-sm">Resolved</span>`;
@@ -1216,18 +1187,12 @@ function renderStatusBadge(status, isEscalated) {
   if (s === "under review") {
     return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800 border-sky-200">Under Review</span>`;
   }
-  return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-titanium-600">Submitted</span>`;
-}
-
-function renderPriorityBadge(priority) {
-  const p = (priority || "").toLowerCase();
-  if (p === "urgent") {
-    return `<span class="pill-btn px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-red-100 text-red-700 border-red-200">Urgent</span>`;
+  if (s === "rejected") {
+    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-red-100 text-red-700 border-red-200">Rejected</span>`;
   }
-  if (p === "high") {
-    return `<span class="pill-btn px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 border-amber-200">High</span>`;
-  }
-  return `<span class="pill-btn px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-titanium-600">${priority || "Medium"}</span>`;
+  // "Submitted" / default — hide on admin side, show orange on student side
+  if (isAdmin) return "";
+  return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-700 border-orange-200">Pending</span>`;
 }
 
 function escapeHtml(str) {

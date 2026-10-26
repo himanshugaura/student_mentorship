@@ -55,12 +55,6 @@ public class GrievanceApi implements HttpHandler {
                 return;
             }
 
-            
-            if (path.matches("/api/grievances/\\d+/escalate") && (method.equals("PUT") || method.equals("POST"))) {
-                long id = Long.parseLong(path.split("/")[3]);
-                handleEscalate(exchange, id, body);
-                return;
-            }
 
             
             if (path.matches("/api/grievances/\\d+") && method.equals("GET")) {
@@ -194,24 +188,6 @@ public class GrievanceApi implements HttpHandler {
             int rows = stmt.executeUpdate();
             if (rows > 0) {
                 JsonUtil.sendJson(exchange, 200, "{\"message\": \"Status updated successfully\", \"id\": " + id + ", \"status\": \"" + JsonUtil.escape(status != null ? status : "") + "\"}");
-            } else {
-                JsonUtil.sendJson(exchange, 404, "{\"error\": \"Grievance not found\"}");
-            }
-        }
-    }
-
-    private void handleEscalate(HttpExchange exchange, long id, String body) throws Exception {
-        Map<String, String> data = JsonUtil.parseJson(body);
-        String reason = data.getOrDefault("reason", "Delayed response");
-
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("UPDATE grievances SET is_escalated = TRUE, priority = 'Urgent', escalation_reason = ? WHERE id = ?")) {
-            stmt.setString(1, reason);
-            stmt.setLong(2, id);
-
-            int rows = stmt.executeUpdate();
-            if (rows > 0) {
-                JsonUtil.sendJson(exchange, 200, "{\"message\": \"Grievance escalated to Urgent\", \"id\": " + id + "}");
             } else {
                 JsonUtil.sendJson(exchange, 404, "{\"error\": \"Grievance not found\"}");
             }

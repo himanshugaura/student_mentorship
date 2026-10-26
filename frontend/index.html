@@ -175,6 +175,7 @@
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-titanium-600 mb-1">Phone</label>
               <input id="regPhone" name="tel" autocomplete="tel" type="tel" placeholder="9876543210" class="glass-input w-full px-3 py-2.5 rounded-2xl text-sm">
+              <p id="regPhoneErr" class="text-xs text-red-600 mt-1 font-medium hidden"></p>
             </div>
             <div id="rollNumberGroup">
               <label class="block text-xs font-bold uppercase tracking-wider text-titanium-600 mb-1">Student ID (8 Digits)</label>
@@ -255,15 +256,7 @@
                     <option value="Other">Other</option>
                   </select>
                 </div>
-                <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-titanium-600 mb-1.5">Priority</label>
-                  <select id="gPriority" class="glass-input w-full px-3.5 py-2.5 rounded-2xl text-sm">
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                    <option value="High">High</option>
-                    <option value="Urgent">Urgent</option>
-                  </select>
-                </div>
+
               </div>
 
               <button id="grievanceSubmitBtn" type="submit" class="pill-mint w-full sm:w-auto px-7 py-3 text-xs font-bold uppercase tracking-wider shadow-md">
@@ -387,10 +380,7 @@
               <span class="text-xs uppercase text-emerald-600 block font-bold">Resolved</span>
               <div id="statResolvedGrievances" class="text-2xl font-heading font-black text-emerald-700 mt-1">0</div>
             </div>
-            <div class="glass-panel rounded-2xl p-4">
-              <span class="text-xs uppercase text-red-600 block font-bold">Escalated</span>
-              <div id="statEscalatedGrievances" class="text-2xl font-heading font-black text-red-700 mt-1">0</div>
-            </div>
+
           </div>
 
           
@@ -538,24 +528,6 @@
     </div>
   </div>
 
-  
-  <div id="escalateModal" class="fixed inset-0 z-50 hidden bg-titanium-900/40 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="glass-panel rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-4 shadow-2xl border-red-300">
-      <div class="flex justify-between items-center border-red-200 pb-3">
-        <h3 class="text-sm font-extrabold text-red-600 uppercase tracking-wider">Escalate Delayed Grievance</h3>
-        <button onclick="closeModal('escalateModal')" class="text-titanium-500 hover:text-black font-bold text-lg">&times;</button>
-      </div>
-      <input type="hidden" id="escalateGrievanceId">
-      <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-titanium-600 mb-1.5">Reason for Escalation *</label>
-        <textarea id="escalateReason" rows="3" placeholder="e.g. Complaint pending for over 7 days without faculty action." class="glass-input w-full px-3.5 py-2.5 rounded-2xl text-sm" required></textarea>
-      </div>
-      <div class="flex justify-end gap-2.5 pt-2">
-        <button onclick="closeModal('escalateModal')" class="pill-btn px-4 py-2 text-xs uppercase">Cancel</button>
-        <button id="modalEscalateSubmitBtn" onclick="submitEscalation(this)" class="pill-black px-5 py-2 text-xs font-bold uppercase tracking-wider bg-red-600 hover:bg-red-700">Confirm Escalation</button>
-      </div>
-    </div>
-  </div>
 
   
   <div id="meetingModal" class="fixed inset-0 z-50 hidden bg-titanium-900/40 backdrop-blur-md flex items-center justify-center p-4">
