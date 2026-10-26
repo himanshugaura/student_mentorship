@@ -945,10 +945,12 @@ async function deleteUser(id, btnTrigger = null) {
 function openStatusModal(id, currentStatus, currentRemarks) {
   document.getElementById("modalGrievanceId").value = id;
   const statusSelect = document.getElementById("modalStatusSelect");
-  if (currentStatus === "Rejected") {
+  if (currentStatus === "Resolved") {
+    statusSelect.value = "Resolved";
+  } else if (currentStatus === "Rejected") {
     statusSelect.value = "Rejected";
   } else {
-    statusSelect.value = "Resolved";
+    statusSelect.value = "";
   }
   document.getElementById("modalRemarks").value = currentRemarks || "";
   document.getElementById("statusModal").classList.remove("hidden");
@@ -961,6 +963,11 @@ async function submitStatusUpdate(btnTrigger = null) {
   const id = document.getElementById("modalGrievanceId").value;
   const status = document.getElementById("modalStatusSelect").value;
   const remarks = document.getElementById("modalRemarks").value.trim();
+
+  if (!status) {
+    showToast("Please select a status", true);
+    return;
+  }
 
   setButtonLoading(btn, true, "Saving...");
   try {
@@ -991,10 +998,10 @@ async function submitStatusUpdate(btnTrigger = null) {
 function openMeetingModal(id, status, venue, feedback) {
   document.getElementById("modalMeetingId").value = id;
   const statusSelect = document.getElementById("modalMeetingStatus");
-  if (status && status !== "Requested") {
+  if (status && status !== "Requested" && status !== "Pending") {
     statusSelect.value = status;
   } else {
-    statusSelect.value = "Approved";
+    statusSelect.value = "";
   }
   document.getElementById("modalMeetingVenue").value = venue || "";
   document.getElementById("modalMeetingFeedback").value = feedback || "";
@@ -1009,6 +1016,11 @@ async function submitMeetingUpdate(btnTrigger = null) {
   const status = document.getElementById("modalMeetingStatus").value;
   const venueOrLink = document.getElementById("modalMeetingVenue").value.trim();
   const feedback = document.getElementById("modalMeetingFeedback").value.trim();
+
+  if (!status) {
+    showToast("Please select a status", true);
+    return;
+  }
 
   setButtonLoading(btn, true, "Updating...");
   try {

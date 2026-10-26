@@ -176,7 +176,11 @@ public class GrievanceApi implements HttpHandler {
         String status = data.get("status");
         String remarks = data.get("remarks");
 
-        if (status != null && (status.equalsIgnoreCase("Pending") || status.equalsIgnoreCase("Submitted"))) {
+        if (status == null || status.trim().isEmpty()) {
+            JsonUtil.sendJson(exchange, 400, "{\"error\": \"Please select a status\"}");
+            return;
+        }
+        if (status.equalsIgnoreCase("Pending") || status.equalsIgnoreCase("Submitted")) {
             JsonUtil.sendJson(exchange, 400, "{\"error\": \"Grievance cannot be changed back to Pending status\"}");
             return;
         }
