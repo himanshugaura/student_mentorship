@@ -18,14 +18,11 @@ CREATE TABLE IF NOT EXISTS grievances (
     id SERIAL PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     description TEXT NOT NULL,
-    category VARCHAR(50) DEFAULT 'Other',    
-    priority VARCHAR(20) DEFAULT 'Medium',   
+    category VARCHAR(50) DEFAULT 'Other',       
     status VARCHAR(30) DEFAULT 'Submitted',  
     student_id INT REFERENCES users(id) ON DELETE CASCADE,
     student_name VARCHAR(100),
-    mentor_id INT REFERENCES users(id) ON DELETE SET NULL,
-    is_escalated BOOLEAN DEFAULT FALSE,      
-    escalation_reason TEXT,                  
+    mentor_id INT REFERENCES users(id) ON DELETE SET NULL,                        
     remarks TEXT,                            
     created_at VARCHAR(50)                   
 );
@@ -57,12 +54,11 @@ INSERT INTO users (name, email, password, role, department, phone, roll_number, 
 VALUES ('Khushbu', 'student@college.edu', 'student123', 'STUDENT', 'BCA', '9876543212', '24042824', 2, 'Himanshu')
 ON CONFLICT (email) DO NOTHING;
 
-INSERT INTO grievances (title, description, category, priority, status, student_id, student_name, mentor_id, created_at)
+INSERT INTO grievances (title, description, category, status, student_id, student_name, mentor_id, created_at)
 VALUES (
     'Wi-Fi not working in Computer Lab 3',
     'Internet disconnects continuously during practical lab classes, affecting our coursework.',
     'Infrastructure',
-    'High',
     'Submitted',
     3,
     'Khushbu',

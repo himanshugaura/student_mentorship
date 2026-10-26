@@ -70,6 +70,12 @@ public class AuthApi implements HttpHandler {
             return;
         }
 
+        if (phone == null || !phone.trim().matches("^\\d{10}$")) {
+            JsonUtil.sendJson(exchange, 400, "{\"error\": \"Phone number must be exactly 10 digits\"}");
+            return;
+        }
+        phone = phone.trim();
+
         
         if ("STUDENT".equalsIgnoreCase(role)) {
             if (rollNumber == null || !rollNumber.trim().matches("^\\d{8}$")) {

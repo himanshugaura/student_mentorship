@@ -174,7 +174,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-titanium-600 mb-1">Phone</label>
-              <input id="regPhone" name="tel" autocomplete="tel" type="tel" placeholder="9876543210" class="glass-input w-full px-3 py-2.5 rounded-2xl text-sm">
+              <input id="regPhone" name="tel" autocomplete="tel" type="tel" maxlength="10" pattern="\d{10}" inputmode="numeric" placeholder="9876543210" class="glass-input w-full px-3 py-2.5 rounded-2xl text-sm" required>
               <p id="regPhoneErr" class="text-xs text-red-600 mt-1 font-medium hidden"></p>
             </div>
             <div id="rollNumberGroup">

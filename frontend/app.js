@@ -239,7 +239,10 @@ async function handleRegisterSubmit(event) {
     hasError = true;
   }
 
-  if (phone && !/^\d{10}$/.test(phone)) {
+  if (!phone) {
+    showError("regPhoneErr", "Phone number is required");
+    hasError = true;
+  } else if (!/^\d{10}$/.test(phone)) {
     showError("regPhoneErr", "Phone number must be exactly 10 digits");
     hasError = true;
   }
@@ -978,28 +981,7 @@ async function submitStatusUpdate(btnTrigger = null) {
   }
 }
 
-  setButtonLoading(btn, true, "Escalating...");
-  try {
-    const res = await fetch(`${API_BASE}/grievances/${id}/escalate`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reason })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      showToast(data.error || "Failed to escalate", true);
-      return;
-    }
 
-    showToast("Complaint escalated to Urgent!");
-    closeModal("escalateModal");
-    loadStudentData();
-  } catch (err) {
-    showToast("Failed to escalate", true);
-  } finally {
-    setButtonLoading(btn, false);
-  }
-}
 
 function openMeetingModal(id, status, venue, feedback) {
   document.getElementById("modalMeetingId").value = id;

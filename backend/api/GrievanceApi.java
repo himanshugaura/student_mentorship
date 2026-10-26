@@ -75,7 +75,6 @@ public class GrievanceApi implements HttpHandler {
         String title = data.get("title");
         String desc = data.get("description");
         String category = data.get("category");
-        String priority = data.getOrDefault("priority", "Medium");
         Long studentId = data.containsKey("studentId") ? Long.parseLong(data.get("studentId")) : null;
         String studentName = data.get("studentName");
 
@@ -107,17 +106,16 @@ public class GrievanceApi implements HttpHandler {
 
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement("""
-                 INSERT INTO grievances (title, description, category, priority, status, student_id, student_name, mentor_id, created_at)
-                 VALUES (?, ?, ?, ?, 'Submitted', ?, ?, ?, ?) RETURNING id
+                 INSERT INTO grievances (title, description, category, status, student_id, student_name, mentor_id, created_at)
+                 VALUES (?, ?, ?, 'Submitted', ?, ?, ?, ?) RETURNING id
              """)) {
             stmt.setString(1, title);
             stmt.setString(2, desc);
             stmt.setString(3, category);
-            stmt.setString(4, priority);
-            stmt.setObject(5, studentId);
-            stmt.setString(6, studentName);
-            stmt.setObject(7, mentorId);
-            stmt.setString(8, now);
+            stmt.setObject(4, studentId);
+            stmt.setString(5, studentName);
+            stmt.setObject(6, mentorId);
+            stmt.setString(7, now);
 
             ResultSet rs = stmt.executeQuery();
             long newId = rs.next() ? rs.getLong(1) : 0;
@@ -127,7 +125,6 @@ public class GrievanceApi implements HttpHandler {
                     + "\"id\": " + newId + ","
                     + "\"title\": \"" + JsonUtil.escape(title) + "\","
                     + "\"category\": \"" + JsonUtil.escape(category) + "\","
-                    + "\"priority\": \"" + JsonUtil.escape(priority) + "\","
                     + "\"status\": \"Submitted\","
                     + "\"createdAt\": \"" + now + "\""
                     + "}";
@@ -138,14 +135,14 @@ public class GrievanceApi implements HttpHandler {
     private void handleGetAllGrievances(HttpExchange exchange) throws Exception {
         try (Connection conn = Database.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM grievances ORDER BY id DESC")) {
+             ResultSet rs = stmt.executeQuery("SELECT id, title, description, category, status, remarks, student_id, student_name, mentor_id, created_at FROM grievances ORDER BY id DESC")) {
             JsonUtil.sendJson(exchange, 200, JsonUtil.resultSetToJson(rs));
         }
     }
 
     private void handleGetByStudent(HttpExchange exchange, long studentId) throws Exception {
         try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM grievances WHERE student_id = ? ORDER BY id DESC")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT id, title, description, category, status, remarks, student_id, student_name, mentor_id, created_at FROM grievances WHERE student_id = ? ORDER BY id DESC")) {
             stmt.setLong(1, studentId);
             ResultSet rs = stmt.executeQuery();
             JsonUtil.sendJson(exchange, 200, JsonUtil.resultSetToJson(rs));
@@ -154,7 +151,7 @@ public class GrievanceApi implements HttpHandler {
 
     private void handleGetByMentor(HttpExchange exchange, long mentorId) throws Exception {
         try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM grievances WHERE mentor_id = ? ORDER BY id DESC")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT id, title, description, category, status, remarks, student_id, student_name, mentor_id, created_at FROM grievances WHERE mentor_id = ? ORDER BY id DESC")) {
             stmt.setLong(1, mentorId);
             ResultSet rs = stmt.executeQuery();
             JsonUtil.sendJson(exchange, 200, JsonUtil.resultSetToJson(rs));
@@ -163,7 +160,7 @@ public class GrievanceApi implements HttpHandler {
 
     private void handleGetById(HttpExchange exchange, long id) throws Exception {
         try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM grievances WHERE id = ?")) {
+             PreparedStatement stmt = conn.prepareStatement("SELECT id, title, description, category, status, remarks, student_id, student_name, mentor_id, created_at FROM grievances WHERE id = ?")) {
             stmt.setLong(1, id);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {

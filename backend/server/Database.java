@@ -99,17 +99,20 @@ public class Database {
                     title VARCHAR(200) NOT NULL,
                     description TEXT NOT NULL,
                     category VARCHAR(50),
-                    priority VARCHAR(20),
                     status VARCHAR(30) DEFAULT 'Submitted',
                     student_id INT,
                     student_name VARCHAR(100),
                     mentor_id INT,
-                    is_escalated BOOLEAN DEFAULT FALSE,
-                    escalation_reason TEXT,
                     remarks TEXT,
                     created_at VARCHAR(50)
                 )
             """);
+
+            try {
+                stmt.execute("ALTER TABLE grievances DROP COLUMN IF EXISTS priority");
+                stmt.execute("ALTER TABLE grievances DROP COLUMN IF EXISTS is_escalated");
+                stmt.execute("ALTER TABLE grievances DROP COLUMN IF EXISTS escalation_reason");
+            } catch (Exception ignored) {}
 
             
             stmt.execute("""
