@@ -463,7 +463,7 @@ function renderStudentMeetings(meetings) {
     <div class="glass-panel rounded-2xl p-4 sm:p-5 space-y-3 min-w-0 max-w-full overflow-hidden">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 min-w-0">
         <h4 class="text-sm font-extrabold text-titanium-900 break-words min-w-0 flex-1">${escapeHtml(m.title)}</h4>
-        <span class="pill-btn px-3 py-0.5 text-xs font-bold text-titanium-800 self-start sm:self-auto flex-shrink-0">${escapeHtml(m.status)}</span>
+        <div class="self-start sm:self-auto flex-shrink-0">${renderMeetingStatusBadge(m.status)}</div>
       </div>
       <p class="text-xs text-titanium-700 leading-relaxed break-words whitespace-pre-wrap min-w-0">${escapeHtml(m.purpose || "Guidance session")}</p>
       <div class="text-xs text-titanium-600 break-words min-w-0">
@@ -645,7 +645,7 @@ async function loadMentorData() {
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 min-w-0">
             <h4 class="text-sm font-extrabold text-titanium-900 break-words min-w-0 flex-1">${escapeHtml(m.title)}</h4>
             <div class="flex items-center gap-2 flex-wrap flex-shrink-0">
-              <span class="pill-btn px-3 py-0.5 text-xs font-bold text-titanium-800">${escapeHtml(m.status)}</span>
+              ${renderMeetingStatusBadge(m.status)}
               <button onclick="openMeetingModal(${m.id}, '${m.status}', '${escapeHtml(m.venueOrLink || "")}', '${escapeHtml(m.feedback || "")}')" class="pill-mint px-3.5 py-1 text-xs font-bold">
                 Manage
               </button>
@@ -1156,6 +1156,24 @@ function showToast(message, isError = false) {
   } else {
     toast.success(message);
   }
+}
+
+function renderMeetingStatusBadge(status) {
+  const s = (status || "").toLowerCase();
+  if (s === "completed") {
+    return `<span class="pill-mint px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider shadow-sm">Completed</span>`;
+  }
+  if (s === "approved" || s === "scheduled") {
+    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-sky-100 text-sky-800 border-sky-200">${escapeHtml(status)}</span>`;
+  }
+  if (s === "in progress") {
+    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-800 border-amber-200">In Progress</span>`;
+  }
+  if (s === "cancelled" || s === "rejected") {
+    return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-red-100 text-red-700 border-red-200">${escapeHtml(status)}</span>`;
+  }
+  // "Requested" / "Pending" / default
+  return `<span class="pill-btn px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-700 border-orange-200">${escapeHtml(status || "Requested")}</span>`;
 }
 
 function renderStatusBadge(status, isAdmin) {
