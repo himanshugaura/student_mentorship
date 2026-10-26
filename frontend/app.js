@@ -985,7 +985,12 @@ async function submitStatusUpdate(btnTrigger = null) {
 
 function openMeetingModal(id, status, venue, feedback) {
   document.getElementById("modalMeetingId").value = id;
-  if (status) document.getElementById("modalMeetingStatus").value = status;
+  const statusSelect = document.getElementById("modalMeetingStatus");
+  if (status && status !== "Requested") {
+    statusSelect.value = status;
+  } else {
+    statusSelect.value = "Approved";
+  }
   document.getElementById("modalMeetingVenue").value = venue || "";
   document.getElementById("modalMeetingFeedback").value = feedback || "";
   document.getElementById("meetingModal").classList.remove("hidden");

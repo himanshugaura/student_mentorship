@@ -207,6 +207,11 @@ public class MentorshipApi implements HttpHandler {
         String venue = data.get("venueOrLink");
         String feedback = data.get("feedback");
 
+        if (status != null && status.equalsIgnoreCase("Requested")) {
+            JsonUtil.sendJson(exchange, 400, "{\"error\": \"Meeting cannot be changed back to Requested status\"}");
+            return;
+        }
+
         try (Connection conn = Database.getConnection();
              PreparedStatement stmt = conn.prepareStatement("""
                  UPDATE meetings 
